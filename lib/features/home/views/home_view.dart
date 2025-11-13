@@ -59,13 +59,14 @@ class _HomeViewState extends State<HomeView> {
                     text: 'Cheeseburger',
                     desc: "Wendy's Burger",
                     rate: "4.9",
+                    isSelected: false,
                   );
                 }),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: .68,
+                  childAspectRatio: .66,
                   mainAxisSpacing: 12,
-                  // crossAxisSpacing: 12,
+                  crossAxisSpacing: 12,
                 ),
               ),
             ),
