@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:hungry/core/constants/app_colors.dart';
 import 'package:hungry/features/cart/views/cart_view.dart';
 import 'package:hungry/features/home/views/home_view.dart';
-
-import 'features/auth/views/profile_view.dart';
-import 'features/orderHistory/views/order_history_view.dart';
+import 'package:hungry/features/auth/views/profile_view.dart';
+import 'package:hungry/features/orderHistory/views/order_history_view.dart';
 
 class Root extends StatefulWidget {
   const Root({super.key});
@@ -35,46 +34,48 @@ class _RootState extends State<Root> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageView(controller: _pageController, children: screens),
-      bottomNavigationBar: Container(
-      margin: EdgeInsets.all(10),
-        decoration: BoxDecoration(
-        color: AppColors.primary,
+      body: PageView(
+        controller: _pageController,
+        physics: NeverScrollableScrollPhysics(),
+        children: screens,
+      ),
+
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(10),
+        child: ClipRRect(
           borderRadius: BorderRadius.circular(30),
-        ),
-        child: BottomNavigationBar(
+          child: BottomNavigationBar(
+            backgroundColor: AppColors.primary,
+            elevation: 0,
+            type: BottomNavigationBarType.fixed,
+            currentIndex: currentIndex,
+            selectedItemColor: Colors.white,
+            unselectedItemColor: Colors.grey.shade700,
 
-          onTap: (index){
-            setState(() {
-              currentIndex = index;
+            onTap: (index) {
+              setState(() => currentIndex = index);
+              _pageController.jumpToPage(index);
+            },
 
-            });
-            _pageController.jumpToPage(currentIndex);
-          },
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          type: BottomNavigationBarType.fixed,
-          currentIndex: currentIndex,
-          selectedItemColor: Colors.white,
-          unselectedItemColor: Colors.grey.shade700,
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.cart),
-              label: 'Cart',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.local_restaurant_sharp),
-              label: 'Order History',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.profile_circled),
-              label: 'Profile',
-            ),
-          ],
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(CupertinoIcons.home),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(CupertinoIcons.cart),
+                label: 'Cart',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.local_restaurant_sharp),
+                label: 'Orders',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(CupertinoIcons.profile_circled),
+                label: 'Profile',
+              ),
+            ],
+          ),
         ),
       ),
     );
