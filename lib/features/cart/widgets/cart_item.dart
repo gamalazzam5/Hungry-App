@@ -53,7 +53,11 @@ class CartItem extends StatelessWidget {
                       ),
                     ),
                     Gap(20),
-                    Text("$number", style: Styles.boldTextStyle20),
+                    SizedBox(
+                        height: 25,
+                        width: 25,
+
+                        child: Center(child: Text("$number", style: Styles.boldTextStyle20))),
                     Gap(20),
 
                     GestureDetector(
