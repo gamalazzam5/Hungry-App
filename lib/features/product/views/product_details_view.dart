@@ -92,6 +92,7 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                   CustomButton(text: 'Add To Cart', onTap: () {}),
                 ],
               ),
+              Gap(100)
             ],
           ),
         ),
