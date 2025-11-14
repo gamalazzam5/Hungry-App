@@ -1,0 +1,38 @@
+import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
+
+import '../../../core/constants/app_colors.dart';
+
+class SpicySlider extends StatelessWidget {
+  const SpicySlider({super.key, required this.value, required this.onChanged});
+final double value;
+final ValueChanged<double> onChanged;
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: .spaceBetween,
+      children: [
+        Image.asset('assets/test/pngwing 12.png', width: 120),
+        Column(
+          children: [
+            Text(
+              'Customize Your Burger\n to Your Tastes.\n Ultimate Experience',
+            ),
+            Slider(
+              value: value,
+              onChanged: onChanged,
+              inactiveColor: Colors.grey.shade300,
+              activeColor: AppColors.primary,
+              min: 0,
+              max: 1,
+            ),
+            Row(
+              mainAxisAlignment: .spaceBetween,
+              children: [Text('🥶'), Gap(100), Text('🌶️')],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}

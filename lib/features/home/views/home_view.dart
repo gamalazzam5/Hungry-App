@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hungry/core/routes/app_router.dart';
 import 'package:hungry/features/home/widgets/card_item.dart';
 import 'package:hungry/features/home/widgets/categories.dart';
 import 'package:hungry/features/home/widgets/search_field.dart';
@@ -30,16 +32,19 @@ class _HomeViewState extends State<HomeView> {
               scrolledUnderElevation: 0,
               elevation: 0,
               backgroundColor: Colors.white,
-              toolbarHeight: 160,
+              toolbarHeight: 150,
               automaticallyImplyLeading: false,
               flexibleSpace: Padding(
-                padding: EdgeInsets.only(top: 40,right: 20,left: 20),
-                child: Column(children: [UserHeader(),Gap(20), SearchField()]),
+                padding: EdgeInsets.only(top: 40, right: 20, left: 20),
+                child: Column(children: [UserHeader(), Gap(20), SearchField()]),
               ),
             ),
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0,vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 16,
+                ),
                 child: Categories(
                   category: category,
                   selectedIndex: selectedIndex,
@@ -48,18 +53,21 @@ class _HomeViewState extends State<HomeView> {
             ),
 
             SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverGrid(
                 delegate: SliverChildBuilderDelegate(childCount: 6, (
                   context,
                   index,
                 ) {
-                  return CardItem(
-                    image: 'assets/test/image 6.png',
-                    text: 'Cheeseburger',
-                    desc: "Wendy's Burger",
-                    rate: "4.9",
-                    isSelected: false,
+                  return GestureDetector(
+                    onTap: ()=> GoRouter.of(context).push(AppRoutePaths.productDetailsView),
+                    child: CardItem(
+                      image: 'assets/test/image 6.png',
+                      text: 'Cheeseburger',
+                      desc: "Wendy's Burger",
+                      rate: "4.9",
+                      isSelected: false,
+                    ),
                   );
                 }),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
