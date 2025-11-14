@@ -1,10 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:gap/gap.dart';
-import 'package:hungry/core/constants/app_colors.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hungry/core/constants/app_styles.dart';
 import 'package:hungry/core/shared/custom_button.dart';
 import 'package:hungry/features/cart/widgets/cart_item.dart';
+
+import '../../../core/routes/app_router.dart';
 
 class CartView extends StatefulWidget {
   const CartView({super.key});
@@ -87,7 +88,9 @@ class _CartViewState extends State<CartView> {
                 Text('\$18.9', style: Styles.boldTextStyle20),
               ],
             ),
-            CustomButton(text: 'Checkout', onTap: () {}),
+            CustomButton(text: 'Checkout', onTap: () {
+              GoRouter.of(context).push(AppRoutePaths.checkout);
+            }),
           ],
         ),
       ),
