@@ -24,11 +24,11 @@ class PaymentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       onTap: onTap ,
-      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: subTitle == null ? 16: 10),
+      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: subTitle == null ? 12 : 4),
       tileColor: tileColor,
       title: Text(
         title,
-        style: Styles.textStyle20.copyWith(color: Colors.white),
+        style: Styles.textStyle16.copyWith(color: Colors.white),
       ),
       subtitle: subTitle != null ? Text(subTitle!,style: Styles.textStyle14.copyWith(color: Colors.white),) : null,
       leading: Image.asset(icon, width: 72, height: 72),

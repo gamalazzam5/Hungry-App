@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hungry/core/routes/app_router.dart';
 import 'package:hungry/features/auth/widgets/custom_btn.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -21,14 +23,12 @@ class _SignupViewState extends State<SignupView> {
 
   late TextEditingController passwordController;
 
-  late TextEditingController confirmPassController;
   late GlobalKey<FormState> _formKey;
 
   @override
   void initState() {
     emailController = TextEditingController();
     passwordController = TextEditingController();
-    confirmPassController = TextEditingController();
     nameController = TextEditingController();
     _formKey = GlobalKey<FormState>();
     super.initState();
@@ -38,7 +38,6 @@ class _SignupViewState extends State<SignupView> {
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
-    confirmPassController.dispose();
     nameController.dispose();
     _formKey.currentState?.dispose();
     super.dispose();
@@ -46,50 +45,85 @@ class _SignupViewState extends State<SignupView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      backgroundColor: AppColors.primary,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+       backgroundColor: AppColors.primary,
+        body: Center(
           child: Form(
             key: _formKey,
             child: Column(
               children: [
-                Gap(100),
-                SvgPicture.asset('assets/logo/logo.svg'),
-                Gap(60),
-                CustomTextFormField(
-                  hintText: 'Name',
-                  borderRadius: 6,
-                  controller: nameController,
+                Gap(200),
+                SvgPicture.asset(
+                  'assets/logo/logo.svg',
+
                 ),
-                Gap(10),
-                CustomTextFormField(
-                  hintText: 'Email Address',
-                  borderRadius: 6,
-                  controller: emailController,
-                ),
-                Gap(10),
-                CustomTextFormField(
-                  hintText: 'Password',
-                  borderRadius: 6,
-                  controller: passwordController,
-                  isPassword: true,
-                ),
-                Gap(10),
-                CustomTextFormField(
-                  hintText: 'Confirm Password',
-                  borderRadius: 6,
-                  controller: confirmPassController,
-                  isPassword: true,
-                ),
-                Gap(25),
-                CustomAuthBtn( onTap: () {
-                  if (_formKey.currentState!.validate()) {
-                    debugPrint("Success");
-                  }
-                }, text: 'Sign up'),
+                Gap(6),
+                Text('Welcome to our Food App',style: Styles.textStyle16.copyWith(color: Colors.white),),
+                Gap(70),
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(30),
+                        topRight: Radius.circular(30),
+                      )
+
+                    ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          Gap(30),
+                          CustomTextFormField(
+                            hintText: 'Name',
+                            borderRadius: 6,
+                            controller: nameController,
+                          ),
+                          Gap(10),
+                          CustomTextFormField(
+                            hintText: 'Email Address',
+                            borderRadius: 6,
+                            controller: emailController,
+                          ),
+                          Gap(10),
+                          CustomTextFormField(
+                            hintText: 'Password',
+                            borderRadius: 6,
+                            controller: passwordController,
+                            isPassword: true,
+                          ),
+                      
+                          Gap(25),
+                          CustomAuthBtn(
+                            color: AppColors.primary,
+                            textColor: Colors.white,
+                            onTap: () {
+                              if (_formKey.currentState!.validate()) {
+                                debugPrint("Success");
+                              }
+                            },
+                            text: 'Sign up',
+                          ),
+                          Gap(10),
+                          CustomAuthBtn(
+                            onTap: () {
+                           GoRouter.of(context).push(AppRoutePaths.loginView);
+                            },
+                            text: 'Go to Login',
+                         color: Colors.grey.shade300,
+                      
+                            textColor: AppColors.primary,
+                          ),
+                          Gap(200)
+                        ],
+                      ),
+                    ),
+                  ),
+                )
               ],
             ),
           ),

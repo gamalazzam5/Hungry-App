@@ -66,6 +66,7 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
     return TextFormField(
       cursorColor: AppColors.primary,
       cursorHeight: 20,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
       controller: widget.controller,
       keyboardType: widget.keyboardType,
       obscureText: _obscureText,
@@ -85,23 +86,23 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
             ? GestureDetector(
                 onTap: _togglePassword,
                 child: Icon(
-                  _obscureText ? CupertinoIcons.eye : CupertinoIcons.eye_slash,
+                  _obscureText ? CupertinoIcons.eye : CupertinoIcons.eye_slash,color: AppColors.primary,
                 ),
               )
             : widget.suffixIcon,
         hintText: widget.hintText,
-        hintStyle: Styles.textStyle16,
+        hintStyle: Styles.textStyle16.copyWith(color: AppColors.primary),
         filled: widget.fillColor != null,
-        fillColor: widget.fillColor,
+        fillColor: Colors.transparent,
         // contentPadding: contentPadding ??
         //     EdgeInsets.symmetric(horizontal: 0, vertical: 0),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(widget.borderRadius),
-          borderSide: BorderSide(color: widget.borderColor ?? Colors.white),
+          borderSide: BorderSide(color: widget.borderColor ?? AppColors.primary),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(widget.borderRadius),
-          borderSide: BorderSide(color: widget.borderColor ?? Colors.white),
+          borderSide: BorderSide(color: widget.borderColor ?? AppColors.primary),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(widget.borderRadius),

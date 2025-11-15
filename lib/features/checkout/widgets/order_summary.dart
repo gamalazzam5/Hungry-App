@@ -17,7 +17,7 @@ final bool isBold,isSmall;
           Text(
             title,
             style: Styles.textStyle16.copyWith(
-              fontSize: isSmall?12:16,
+              fontSize: isSmall?14:16,
               color:isBold? null :  AppColors.greyColor,
               fontWeight:isBold? FontWeight.bold:  FontWeight.w400,
             ),
@@ -25,7 +25,7 @@ final bool isBold,isSmall;
           Text(
             '\$$price',
             style: Styles.textStyle16.copyWith(
-              fontSize: isSmall?12:16,
+              fontSize: isSmall?14:16,
               color:isBold? null : AppColors.greyColor,
               fontWeight: isBold? FontWeight.bold: FontWeight.w400,
             ),
