@@ -52,31 +52,41 @@ class _CartViewState extends State<CartView> {
           padding: EdgeInsets.only(bottom: 120, top: 30),
           itemCount: itemCount,
           itemBuilder: (context, index) {
-            return CartItem(
-              title: 'Hamburger',
-              desc: 'Veggie Burger',
-              image: 'assets/test/image 6.png',
-              number: quantity[index],
-              onAdd: () {
-                onAdd(index);
-              },
-              onMinus: () {
-                onMinus(index);
-              },
-              onRemove: () {},
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: CartItem(
+                title: 'Hamburger',
+                desc: 'Veggie Burger',
+                image: 'assets/test/image 6.png',
+                number: quantity[index],
+                onAdd: () {
+                  onAdd(index);
+                },
+                onMinus: () {
+                  onMinus(index);
+                },
+                onRemove: () {},
+              ),
             );
           },
         ),
       ),
       bottomSheet: Container(
-        height: 80,
-        padding: EdgeInsets.all(10),
+        height: 70,
+        padding: EdgeInsets.only(top: 10,left:10,right: 10),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
             topRight: Radius.circular(32),
             topLeft: Radius.circular(32),
           ),
+           boxShadow: [
+        BoxShadow(
+        color: Colors.grey.withValues(alpha: .4),
+        spreadRadius: 5,
+        blurRadius: 20,
+
+      )]
         ),
         child: Row(
           mainAxisAlignment: .spaceBetween,
@@ -88,9 +98,9 @@ class _CartViewState extends State<CartView> {
                 Text('\$18.9', style: Styles.boldTextStyle20),
               ],
             ),
-            CustomButton(text: 'Checkout', onTap: () {
+            CustomButton(text: 'Checkout',horizontalPadding:12,onTap: () {
               GoRouter.of(context).push(AppRoutePaths.checkout);
-            }),
+            },),
           ],
         ),
       ),

@@ -78,25 +78,49 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                   }),
                 ),
               ),
-              Gap(16),
-              Row(
-                mainAxisAlignment: .spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: .start,
-                    children: [
-                      Text('Total', style: Styles.boldTextStyle20),
-                      Text('\$18.9', style: Styles.boldTextStyle20),
-                    ],
-                  ),
-                  CustomButton(text: 'Add To Cart', onTap: () {}),
-                ],
-              ),
+
               Gap(100)
             ],
           ),
         ),
+
       ),
+      bottomSheet: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withValues(alpha: .4),
+                spreadRadius: 5,
+                blurRadius: 7,
+              ),
+            ],
+          ),
+          padding: EdgeInsets.all(14),
+          height: 90,
+      child:
+      Padding(
+        padding: const EdgeInsets.only(left: 8.0),
+        child: Row(
+          mainAxisAlignment: .spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: .start,
+              children: [
+                Text('Total', style: Styles.boldTextStyle20),
+                Text('\$18.9', style: Styles.boldTextStyle20),
+              ],
+            ),
+            CustomButton(text: 'Add To Cart', onTap: () {},horizontalPadding: 8,),
+          ],
+        ),
+      ),
+
+      )
     );
   }
 }

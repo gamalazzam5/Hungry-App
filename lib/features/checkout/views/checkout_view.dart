@@ -46,7 +46,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                 tileColor: const Color(0xFF3C2F2F),
                 icon: 'assets/icon/dollor.png',
                 value: 'Cash',
-          
+
                 groupValue: selectedMethod,
                 onChanged: (v) {
                   setState(() {
@@ -73,14 +73,19 @@ class _CheckoutViewState extends State<CheckoutView> {
               Row(
                 children: [
                   Checkbox(
-                      activeColor: const Color(0xFFEF2A39),
-                      value: true, onChanged: (v){
-          
-                  }),
-                  Text('Save card details for future payments',style: Styles.textStyle14.copyWith(color: AppColors.greyColor),)
+                    activeColor: const Color(0xFFEF2A39),
+                    value: true,
+                    onChanged: (v) {},
+                  ),
+                  Text(
+                    'Save card details for future payments',
+                    style: Styles.textStyle14.copyWith(
+                      color: AppColors.greyColor,
+                    ),
+                  ),
                 ],
               ),
-              Gap(200)
+              Gap(200),
             ],
           ),
         ),
@@ -88,19 +93,21 @@ class _CheckoutViewState extends State<CheckoutView> {
       bottomSheet: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius:   BorderRadius.only(topLeft: Radius.circular(30),topRight: Radius.circular(30)),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.grey.withValues(alpha: .4),
               spreadRadius: 5,
               blurRadius: 7,
-
-            )
-          ]
+            ),
+          ],
         ),
         padding: EdgeInsets.all(14),
         height: 90,
-        child:  Row(
+        child: Row(
           mainAxisAlignment: .spaceBetween,
           children: [
             Column(
@@ -110,51 +117,75 @@ class _CheckoutViewState extends State<CheckoutView> {
                 Text('\$18.9', style: Styles.boldTextStyle20),
               ],
             ),
-            CustomButton(text: 'Pay now', onTap: () {
-              
-              showDialog(context: context, builder: (context){
-                return Dialog(
-                  backgroundColor: Colors.transparent,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10,vertical: 180),
-                    child: Container(
-                      padding:const  EdgeInsets.all(20),
-                      decoration:  BoxDecoration(
-                          color: Colors.white,
-                          borderRadius:   BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withValues(alpha: .4),
-                              spreadRadius: 5,
-                              blurRadius: 7,
-
-                            )
-                          ]
-                      ),
-                      child: Column(
-                        children: [
-                          CircleAvatar(
-                            radius: 40,
-                            backgroundColor: AppColors.primary,
-                            child: Icon(CupertinoIcons.check_mark,color: Colors.white,size: 30,),
+            CustomButton(
+              text: 'Pay now',
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return Dialog(
+                      backgroundColor: Colors.transparent,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 180,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withValues(alpha: .4),
+                                spreadRadius: 5,
+                                blurRadius: 7,
+                              ),
+                            ],
                           ),
-                          Gap(10),
-                          Text('Success !',style:Styles.boldTextStyle24.copyWith(color: AppColors.primary,fontSize: 30) ,),
-                          Gap(8),
-                          Text('Your payment was successful\nA receipt for this purchase has\n been sent to your email.',
-                          style: Styles.textStyle12.copyWith(color: Colors.grey.shade500),
+                          child: Column(
+                            children: [
+                              CircleAvatar(
+                                radius: 40,
+                                backgroundColor: AppColors.primary,
+                                child: Icon(
+                                  CupertinoIcons.check_mark,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                              ),
+                              Gap(10),
+                              Text(
+                                'Success !',
+                                style: Styles.boldTextStyle24.copyWith(
+                                  color: AppColors.primary,
+                                  fontSize: 30,
+                                ),
+                              ),
+                              Gap(8),
+                              Text(
+                                'Your payment was successful\nA receipt for this purchase has\n been sent to your email.',
+                                style: Styles.textStyle12.copyWith(
+                                  color: Colors.grey.shade500,
+                                ),
+                              ),
+                              Gap(20),
+                              CustomButton(
+                                text: "Close",
+                                onTap: () => context.pop(),
+                                width: 200,
+                              ),
+                            ],
                           ),
-                        Gap(20),
-                          CustomButton(text: "Close",onTap: ()=>context.pop(),width: 200,)
-                        ],
+                        ),
                       ),
-                    ),
-                  ) ,
+                    );
+                  },
                 );
-              });
-            },
+              },
 
-            horizontalPadding: 20,),
+              horizontalPadding: 20,
+            ),
           ],
         ),
       ),
