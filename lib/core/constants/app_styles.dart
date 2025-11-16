@@ -9,6 +9,7 @@ class Styles {
   static const TextStyle textStyle12 = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.normal,
+
   );
 
   static const TextStyle textStyle14 = TextStyle(

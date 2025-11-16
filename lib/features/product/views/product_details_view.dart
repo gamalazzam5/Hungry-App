@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hungry/core/constants/app_colors.dart';
 import 'package:hungry/core/constants/app_styles.dart';
 import 'package:hungry/core/shared/custom_button.dart';
 import 'package:hungry/features/product/widgets/spicy_slider.dart';
@@ -79,48 +78,49 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                 ),
               ),
 
-              Gap(100)
+              Gap(100),
             ],
           ),
         ),
-
       ),
       bottomSheet: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(30),
-              topRight: Radius.circular(30),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withValues(alpha: .4),
+              spreadRadius: 5,
+              blurRadius: 7,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withValues(alpha: .4),
-                spreadRadius: 5,
-                blurRadius: 7,
+          ],
+        ),
+        padding: EdgeInsets.all(14),
+        height: 90,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Row(
+            mainAxisAlignment: .spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: .start,
+                children: [
+                  Text('Total', style: Styles.boldTextStyle20),
+                  Text('\$18.9', style: Styles.boldTextStyle20),
+                ],
+              ),
+              CustomButton(
+                text: 'Add To Cart',
+                onTap: () {},
+                horizontalPadding: 8,
               ),
             ],
           ),
-          padding: EdgeInsets.all(14),
-          height: 90,
-      child:
-      Padding(
-        padding: const EdgeInsets.only(left: 8.0),
-        child: Row(
-          mainAxisAlignment: .spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: .start,
-              children: [
-                Text('Total', style: Styles.boldTextStyle20),
-                Text('\$18.9', style: Styles.boldTextStyle20),
-              ],
-            ),
-            CustomButton(text: 'Add To Cart', onTap: () {},horizontalPadding: 8,),
-          ],
         ),
       ),
-
-      )
     );
   }
 }

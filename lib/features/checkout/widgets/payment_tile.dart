@@ -9,7 +9,7 @@ class PaymentTile extends StatelessWidget {
     required this.title,
     required this.tileColor,
     required this.icon,
-    this.subTitle, required this.value, required this.groupValue, required this.onChanged, required this.onTap,
+    this.subTitle, required this.value, required this.groupValue, required this.onChanged, required this.onTap, this.titleColor, this.subTitleColor, this.trailing,
   });
 
   final String title;
@@ -20,6 +20,9 @@ class PaymentTile extends StatelessWidget {
   final String groupValue;
   final ValueChanged<String?> onChanged;
   final VoidCallback onTap;
+  final Color? titleColor;
+  final Color? subTitleColor;
+  final Widget? trailing;
   @override
   Widget build(BuildContext context) {
     return ListTile(
@@ -28,11 +31,11 @@ class PaymentTile extends StatelessWidget {
       tileColor: tileColor,
       title: Text(
         title,
-        style: Styles.textStyle16.copyWith(color: Colors.white),
+        style: Styles.textStyle16.copyWith(color:titleColor?? Colors.white),
       ),
-      subtitle: subTitle != null ? Text(subTitle!,style: Styles.textStyle14.copyWith(color: Colors.white),) : null,
+      subtitle: subTitle != null ? Text(subTitle!,style: Styles.textStyle14.copyWith(color: subTitleColor??Colors.white),) : null,
       leading: Image.asset(icon, width: 72, height: 72),
-      trailing: Radio<String>(
+      trailing:trailing?? Radio<String>(
         value: value,
         groupValue: groupValue,
         activeColor: Colors.white,
