@@ -12,7 +12,7 @@ class DioClient {
   DioClient() {
     _dio.interceptors.add(
       InterceptorsWrapper(
-        onRequest: (options, handler)async {
+        onRequest: (options, handler) async {
           final token = await PrefHelpers.getToken();
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
