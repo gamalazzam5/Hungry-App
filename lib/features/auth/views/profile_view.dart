@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -6,9 +8,11 @@ import 'package:go_router/go_router.dart';
 import 'package:hungry/core/constants/app_colors.dart';
 import 'package:hungry/core/constants/app_styles.dart';
 import 'package:hungry/core/network/api_error.dart';
+import 'package:hungry/core/shared/custom_button.dart';
 import 'package:hungry/core/utils/custom_snack_bar.dart';
 import 'package:hungry/features/auth/data/model/user_model.dart';
 import 'package:hungry/features/auth/widgets/profile_text_field.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../checkout/widgets/payment_tile.dart';
@@ -28,45 +32,84 @@ class _ProfileViewState extends State<ProfileView> {
   final TextEditingController _visa = TextEditingController();
   UserModel? userModel;
   AuthRepo authRepo = AuthRepo();
-  Future<void> getProfileData()async{
+  String? selectedImage;
+  bool isLoading =false;
 
-    try{
+  Future<void> getProfileData() async {
+    try {
       final user = await authRepo.getProfileData();
       setState(() {
         userModel = user;
       });
-    } catch(e){
+    } catch (e) {
       String errMessage = 'Error in profile';
-      if(e is ApiError){
+      if (e is ApiError) {
         errMessage = e.message;
       }
-      if(!mounted) return;
+      if (!mounted) return;
       AppSnackBar.showError(context, errMessage);
+    }
+  }
+
+  ///update profile
+  Future<void> updateProfile() async {
+    try {
+      setState(() => isLoading = true);
+      final user = await authRepo.updateProfileData(
+        name: _name.text.trim(),
+        email: _email.text.trim(),
+        address: _address.text.trim(),
+        visa: _visa.text,
+        image: selectedImage!,
+      );
+      setState(() {
+        userModel = user;
+      });
+      setState(()=>isLoading =false);
+      if (!mounted) return;
+      AppSnackBar.showSuccess(context, 'Profile updated successfully');
+      await getProfileData();
+    } catch (e) {
+      setState(()=>isLoading =false);
+      String errMessage = 'Error in profile';
+      if (e is ApiError) {
+        errMessage = e.message;
+      }
+      if (!mounted) return;
+      AppSnackBar.showError(context, errMessage);
+    }
+  }
+
+  Future<void> pickImage() async {
+    final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        selectedImage = image.path;
+      });
     }
   }
 
   @override
   void initState() {
-    getProfileData().then((v){
-      _name.text = userModel?.name??"";
-      _email.text = userModel?.email??"";
-      _address.text = userModel?.address??"";
+    getProfileData().then((v) {
+      _name.text = userModel?.name ?? "";
+      _email.text = userModel?.email ?? "";
+      _address.text = userModel?.address ?? "";
     });
-   
+
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      backgroundColor:Colors.white ,
+      backgroundColor: Colors.white,
       color: AppColors.primary,
-      onRefresh: () async{
-
+      onRefresh: () async {
         await getProfileData();
       },
       child: GestureDetector(
-       onTap: ()=>FocusScope.of(context).unfocus(),
+        onTap: () => FocusScope.of(context).unfocus(),
         child: Scaffold(
           backgroundColor: AppColors.primary,
           appBar: AppBar(
@@ -80,7 +123,7 @@ class _ProfileViewState extends State<ProfileView> {
             ],
             leading: GestureDetector(
               onTap: () => context.pop(),
-      
+
               child: Icon(Icons.arrow_back, color: Colors.white),
             ),
           ),
@@ -88,7 +131,7 @@ class _ProfileViewState extends State<ProfileView> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: SingleChildScrollView(
               child: Skeletonizer(
-                enabled: userModel==null,
+                enabled: userModel == null,
                 child: Column(
                   children: [
                     Center(
@@ -97,46 +140,64 @@ class _ProfileViewState extends State<ProfileView> {
                         width: 120,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          image: userModel?.image !=null && userModel!.image!.isNotEmpty?
-      
-                          DecorationImage(
-                            image: NetworkImage(
-                               userModel!.image!
-                            ),
-                          ):null,
                           color: Colors.grey.shade300,
                           border: Border.all(width: 2, color: Colors.white),
                         ),
+                        child: selectedImage != null
+                            ? Image.file(File(selectedImage!),fit: BoxFit.cover,)
+                            : (userModel?.image != null &&
+                                  userModel!.image!.isNotEmpty)
+                            ? Image.network(
+                                userModel!.image!,fit: BoxFit.cover,
+                                errorBuilder: (context, err, builder) =>
+                                    Icon(Icons.person),
+                              )
+                            : Icon(Icons.person),
                       ),
+                    ),
+                    Gap(10),
+                    CustomButton(
+                      onTap: pickImage,
+                      text: 'Upload image',
+                      width: 150,
+                      height: 40,
+                      borderRadius: 50,
                     ),
                     Gap(30),
                     ProfileTextField(controller: _name, labelText: 'Name'),
                     Gap(25),
                     ProfileTextField(controller: _email, labelText: 'Email'),
                     Gap(25),
-                    ProfileTextField(controller: _address, labelText: 'Address'),
+                    ProfileTextField(
+                      controller: _address,
+                      labelText: 'Address',
+                    ),
                     Gap(20),
                     Divider(),
                     Gap(10),
-                    userModel?.visa==null?
-                    ProfileTextField(controller: _visa, labelText: 'Visa Card',
-                    keyboardType: TextInputType.number,
-                    ):
-      
-                    PaymentTile(
-                      titleColor: const Color(0xFF3C2F2F),
-                      subTitleColor: AppColors.greyColor,
-                      onTap: () {},
-                      title: 'Debit card',
-                      subTitle:userModel?.visa?? '**** **** **** 0505',
-                      icon: 'assets/icon/visa.png',
-                      tileColor: const Color(0xFFF3F4F6),
-                      value: 'Visa',
-                      groupValue: 'Visa',
-                      onChanged: (v) {},
-                      trailing: Text('Default', style: Styles.boldTextStyle16),
-                    ),
-                    Gap(200)
+                    userModel?.visa == null
+                        ? ProfileTextField(
+                            controller: _visa,
+                            labelText: 'Add Visa Card',
+                            keyboardType: TextInputType.number,
+                          )
+                        : PaymentTile(
+                            titleColor: const Color(0xFF3C2F2F),
+                            subTitleColor: AppColors.greyColor,
+                            onTap: () {},
+                            title: 'Debit card',
+                            subTitle: userModel?.visa ?? '**** **** **** 0505',
+                            icon: 'assets/icon/visa.png',
+                            tileColor: const Color(0xFFF3F4F6),
+                            value: 'Visa',
+                            groupValue: 'Visa',
+                            onChanged: (v) {},
+                            trailing: Text(
+                              'Default',
+                              style: Styles.boldTextStyle16,
+                            ),
+                          ),
+                    Gap(200),
                   ],
                 ),
               ),
@@ -146,45 +207,55 @@ class _ProfileViewState extends State<ProfileView> {
             padding: EdgeInsets.symmetric(horizontal: 8),
             height: 70,
             decoration: BoxDecoration(
-              color: Colors.white
-                  ,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
-            child:Row(
+            child: Row(
               mainAxisAlignment: .spaceBetween,
               children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 24,vertical: 16),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Text('Edit Profile',style: Styles.textStyle18.copyWith(color: Colors.white),),
-                      Gap(5),
-                      Icon(Icons.edit_outlined,color: Colors.white,)
-                    ],
+                GestureDetector(
+                  onTap: updateProfile,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        isLoading ? const CupertinoActivityIndicator(color: Colors.white,) :
+                        Text(
+                          'Edit Profile',
+                          style: Styles.textStyle18.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
+                        Gap(5),
+                        Icon(Icons.edit_outlined, color: Colors.white),
+                      ],
+                    ),
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 24,vertical: 16),
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    border: Border.all(
-                      color: AppColors.primary,
-                    ),
+                    border: Border.all(color: AppColors.primary),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
-      
                     children: [
-                      Text('Log out',style: Styles.textStyle18.copyWith(color: AppColors.primary),),
+                      Text(
+                        'Log out',
+                        style: Styles.textStyle18.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
                       Gap(5),
-                      Icon(Icons.logout_outlined,color: AppColors.primary,)
+                      Icon(Icons.logout_outlined, color: AppColors.primary),
                     ],
                   ),
-                )
+                ),
               ],
             ),
           ),
