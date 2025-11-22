@@ -21,6 +21,7 @@ dependencies:
   gap: ^3.0.1
   dio: ^5.9.0
   shared_preferences: ^2.5.3
+  skeletonizer: ^2.1.0+1
 
 dev_dependencies:
   flutter_test:

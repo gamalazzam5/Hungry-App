@@ -1,59 +1,32 @@
 import 'package:dio/dio.dart';
-import 'package:hungry/core/network/api_error.dart';
+
+import 'api_error.dart';
 
 class ApiExceptions {
   static ApiError handleError(DioException error) {
+    final statusCode = error.response?.statusCode;
+    final data = error.response?.data;
+
+    if (statusCode != null) {
+      if (data is Map<String, dynamic> && data['message'] != null) {
+        return ApiError(message: data['message'], statusCode: statusCode);
+      }
+    }
+
+    if(statusCode == 302) {
+      throw ApiError(message: 'This Email Already Taken');
+    }
+
+
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
-      case DioExceptionType.receiveTimeout:
+        return ApiError(message: "Connection timeout. Please check your internet connection");
       case DioExceptionType.sendTimeout:
-        return ApiError(message: "Connection timed out. Please try again.");
-
-      case DioExceptionType.badResponse:
-        return _handleBadResponse(error.response);
-
-      case DioExceptionType.connectionError:
-        return ApiError(message: "No Internet connection. Check your network.");
-
-      case DioExceptionType.cancel:
-        return ApiError(message: "Request cancelled.");
-
-      case DioExceptionType.badCertificate:
-        return ApiError(
-          message: "Certificate error occurred, try again later.",
-        );
-
-      case DioExceptionType.unknown:
-        if (error.message?.contains("SocketException") == true) {
-          return ApiError(message: "No Internet. Please check your network.");
-        }
-        return ApiError(message: "Unexpected error occurred.");
-
+        return ApiError(message: "Request timeout. Please try again");
+      case DioExceptionType.receiveTimeout:
+        return ApiError(message: "Response timeout. Please try again");
       default:
-        return ApiError(message: "Something went wrong. Try again later.");
-    }
-  }
-
-  static ApiError _handleBadResponse(Response? response) {
-    if (response == null) {
-      return ApiError(message: "Server error. Try again later.");
-    }
-
-    switch (response.statusCode) {
-      case 400:
-        return ApiError(message: "Bad request, please check your input.");
-      case 401:
-        return ApiError(message: "Unauthorized. Please login.");
-      case 403:
-        return ApiError(message: "You don’t have permission.");
-      case 404:
-        return ApiError(message: "Resource not found.");
-      case 500:
-        return ApiError(message: "Server error, please try again later.");
-      default:
-        return ApiError(
-          message: "Error ${response.statusCode}: ${response.statusMessage}",
-        );
+        return ApiError(message: "An unexpected error occurred. Please try again");
     }
   }
 }

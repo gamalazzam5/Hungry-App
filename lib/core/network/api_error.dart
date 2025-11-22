@@ -5,7 +5,5 @@ class ApiError {
   const ApiError({required this.message, this.statusCode});
 
   @override
-  String toString() {
-    return 'The server responded with an Error because $message with Status code $statusCode';
-  }
+  String toString() => message;
 }

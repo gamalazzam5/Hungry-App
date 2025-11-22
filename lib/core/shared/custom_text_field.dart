@@ -71,15 +71,18 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
       keyboardType: widget.keyboardType,
       obscureText: _obscureText,
       onChanged: widget.onChanged,
+
       onTap: widget.onTap,
       readOnly: widget.readOnly,
       maxLines: widget.maxLines,
-      validator: (v) {
-        if (v == null || v.trim().isEmpty) {
-          return 'please fill ${widget.hintText}';
-        }
-        return null;
-      },
+      validator: widget.validator ??
+        (v) {
+      if (v == null || v.trim().isEmpty) {
+        return 'Please fill ${widget.hintText}';
+      }
+      return null;
+    },
+
       decoration: InputDecoration(
         prefixIcon: widget.prefixIcon,
         suffixIcon: widget.isPassword

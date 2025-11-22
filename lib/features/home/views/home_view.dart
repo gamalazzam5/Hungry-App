@@ -32,7 +32,7 @@ class _HomeViewState extends State<HomeView> {
               scrolledUnderElevation: 0,
               elevation: 0,
               backgroundColor: Colors.white,
-              toolbarHeight: 150,
+              toolbarHeight: 180,
               automaticallyImplyLeading: false,
               flexibleSpace: Padding(
                 padding: EdgeInsets.only(top: 40, right: 20, left: 20),

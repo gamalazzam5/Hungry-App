@@ -1,9 +1,13 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungry/core/constants/app_styles.dart';
+import 'package:hungry/core/network/api_error.dart';
 import 'package:hungry/core/shared/custom_text_field.dart';
+import 'package:hungry/core/utils/custom_snack_bar.dart';
+import 'package:hungry/features/auth/data/repos/auth_repo.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routes/app_router.dart';
 import '../widgets/custom_btn.dart';
@@ -19,6 +23,33 @@ class _LoginViewState extends State<LoginView> {
   late TextEditingController emailController;
   late TextEditingController passwordController;
   late GlobalKey<FormState> formKey;
+  AuthRepo authRepo = AuthRepo();
+  bool isLoading = false;
+
+  Future<void> login() async {
+    setState(() => isLoading = true);
+
+    try {
+      final user = await authRepo.login(
+        emailController.text.trim(),
+        passwordController.text.trim(),
+      );
+      if (user != null) {
+        if (!mounted) return;
+        AppSnackBar.showSuccess(context, 'Login Successful');
+        GoRouter.of(context).go(AppRoutePaths.root);
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+      String errMessage = 'Unhandled error';
+      if (e is ApiError) {
+        errMessage = e.message;
+      }
+      if (mounted) {
+        AppSnackBar.showError(context, errMessage);
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -74,32 +105,49 @@ class _LoginViewState extends State<LoginView> {
                           hintText: 'Email Address',
                           borderRadius: 6,
                           controller: emailController,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Email is required';
+                            }
+
+                            final regex = RegExp(
+                              r'^[\w\.-]+@([\w-]+\.)+[\w-]{2,4}$',
+                            );
+                            if (!regex.hasMatch(value.trim())) {
+                              return 'Invalid email format';
+                            }
+
+                            return null;
+                          },
                         ),
-                    
+
                         const Gap(10),
-                    
+
                         CustomTextFormField(
                           hintText: 'Password',
                           borderRadius: 6,
                           controller: passwordController,
                           isPassword: true,
                         ),
-                    
+
                         const Gap(25),
-                    
-                        CustomAuthBtn(
-                          color: AppColors.primary,
-                          textColor: Colors.white,
-                          onTap: () {
-                            if (formKey.currentState!.validate()) {
-                              debugPrint("Success");
-                            }
-                          },
-                          text: 'Login',
-                        ),
-                    
+                        isLoading
+                            ? const CupertinoActivityIndicator(
+                                color: AppColors.primary,
+                              )
+                            : CustomAuthBtn(
+                                color: AppColors.primary,
+                                textColor: Colors.white,
+                                onTap: () {
+                                  if (formKey.currentState!.validate()) {
+                                    login();
+                                  }
+                                },
+                                text: 'Login',
+                              ),
+
                         const Gap(10),
-                    
+
                         CustomAuthBtn(
                           onTap: () {
                             context.push(AppRoutePaths.signupView);
@@ -108,16 +156,22 @@ class _LoginViewState extends State<LoginView> {
                           color: Colors.grey.shade300,
                           textColor: AppColors.primary,
                         ),
-                     Align(
-                       alignment: Alignment.centerRight,
+                        Align(
+                          alignment: .centerRight,
 
-                       child: TextButton(
-
-                           onPressed: (){
-                         GoRouter.of(context).push(AppRoutePaths.root);
-                       } , child: Text('Continue as a Guest ?',style: Styles.boldTextStyle16.copyWith(color: AppColors.primary),)),
-                     )
-,                     Gap(150)
+                          child: TextButton(
+                            onPressed: () {
+                              GoRouter.of(context).push(AppRoutePaths.root);
+                            },
+                            child: Text(
+                              'Continue as a Guest ?',
+                              style: Styles.boldTextStyle16.copyWith(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Gap(150),
                       ],
                     ),
                   ),
