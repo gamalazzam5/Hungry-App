@@ -27,17 +27,14 @@ class _SplashViewState extends State<SplashView>
     animation = SplashAnimationController(vsync: this);
     animation.start();
 
-    _startFlow();
-  }
+    authRepo.autoLogin().then((_) {
+      if (!mounted) return;
+    });
 
-  Future<void> _startFlow() async {
-    await Future.wait([
-      authRepo.autoLogin(),
-      Future.delayed(const Duration(seconds: 3)),
-    ]);
-
-    if (!mounted) return;
-    _navigate();
+    Future.delayed(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      _navigate();
+    });
   }
 
   void _navigate() {
@@ -63,7 +60,7 @@ class _SplashViewState extends State<SplashView>
       backgroundColor: AppColors.primary,
       body: SafeArea(
         child: Column(
-          mainAxisAlignment: .center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Expanded(
               child: Center(
@@ -81,6 +78,7 @@ class _SplashViewState extends State<SplashView>
                 ),
               ),
             ),
+
             AnimatedBuilder(
               animation: animation.controller,
               builder: (_, __) {
