@@ -5,16 +5,24 @@ class DioClient {
   final Dio _dio = Dio(
     BaseOptions(
       baseUrl: 'https://sonic-zdi0.onrender.com/api',
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'application/json',
+          'Accept': 'application/json',},
     ),
   );
 
   DioClient() {
+    // _dio.interceptors.add(LogInterceptor(
+    //   request: true,
+    //   requestHeader: true,
+    //   requestBody: true,
+    //   responseHeader: true,
+    //   responseBody: true,
+    // ));
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           final token = await PrefHelpers.getToken();
-          if (token != null && token.isNotEmpty) {
+          if (token != null && token.isNotEmpty && token != 'guest') {
             options.headers['Authorization'] = 'Bearer $token';
           }
           return handler.next(options);

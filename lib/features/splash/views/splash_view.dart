@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungry/core/constants/app_colors.dart';
 import 'package:hungry/core/routes/app_router.dart';
+import 'package:hungry/features/auth/data/repos/auth_repo.dart';
 import '../widgets/splash_animation_controller.dart';
 
 class SplashView extends StatefulWidget {
@@ -14,8 +15,10 @@ class SplashView extends StatefulWidget {
 
 class _SplashViewState extends State<SplashView>
     with SingleTickerProviderStateMixin {
-
   late final SplashAnimationController animation;
+  final AuthRepo authRepo = AuthRepo();
+
+  bool _navigated = false;
 
   @override
   void initState() {
@@ -24,10 +27,28 @@ class _SplashViewState extends State<SplashView>
     animation = SplashAnimationController(vsync: this);
     animation.start();
 
-    Future.delayed(const Duration(seconds: 3), () {
-      if (!mounted) return;
-      context.go(AppRoutePaths.loginView);
-    });
+    _startFlow();
+  }
+
+  Future<void> _startFlow() async {
+    await Future.wait([
+      authRepo.autoLogin(),
+      Future.delayed(const Duration(seconds: 3)),
+    ]);
+
+    if (!mounted) return;
+    _navigate();
+  }
+
+  void _navigate() {
+    if (_navigated) return;
+    _navigated = true;
+
+    if (authRepo.isLoggedIn || authRepo.isGuest) {
+      GoRouter.of(context).go(AppRoutePaths.root);
+    } else {
+      GoRouter.of(context).go(AppRoutePaths.loginView);
+    }
   }
 
   @override
@@ -42,12 +63,13 @@ class _SplashViewState extends State<SplashView>
       backgroundColor: AppColors.primary,
       body: SafeArea(
         child: Column(
+          mainAxisAlignment: .center,
           children: [
             Expanded(
               child: Center(
                 child: AnimatedBuilder(
                   animation: animation.controller,
-                  builder: (_, _) {
+                  builder: (_, __) {
                     return Opacity(
                       opacity: animation.logoOpacity.value,
                       child: Transform.scale(
@@ -59,10 +81,9 @@ class _SplashViewState extends State<SplashView>
                 ),
               ),
             ),
-
             AnimatedBuilder(
               animation: animation.controller,
-              builder: (_, _) {
+              builder: (_, __) {
                 return Opacity(
                   opacity: animation.imageOpacity.value,
                   child: Image.asset('assets/splash/splash.png'),

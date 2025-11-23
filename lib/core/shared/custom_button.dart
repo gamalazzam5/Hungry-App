@@ -1,10 +1,12 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 
 import '../constants/app_colors.dart';
 import '../constants/app_styles.dart';
 
 class CustomButton extends StatelessWidget {
-  const CustomButton( {super.key, required this.text, this.onTap,this.borderRadius =16,  this.horizontalPadding = 20,  this.verticalPadding =12, this.width, this.color, this.height,});
+  const CustomButton( {super.key, required this.text, this.onTap,this.borderRadius =16,  this.horizontalPadding = 20,  this.verticalPadding =12, this.width, this.color, this.height, this.textColor, this.profileEdit = false,this.iconData,});
 final Function()? onTap;
 final String text;
   final double borderRadius ;
@@ -13,6 +15,9 @@ final String text;
   final double? width;
   final Color? color;
   final double? height;
+  final Color? textColor;
+  final bool profileEdit;
+  final IconData? iconData;
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -26,10 +31,23 @@ final String text;
           borderRadius: BorderRadius.circular(borderRadius),
         ),
         child: Center(
-          child: Text(
+          child: profileEdit? Row(
+            mainAxisAlignment: .spaceBetween,
+            children: [
+              Text(
+                text,
+                style: Styles.textStyle18.copyWith(
+                  color: textColor?? Colors.white,
+                ),
+              ),
+
+              Icon(iconData, color:  AppColors.primary),
+
+            ],
+          ):Text(
             text,
             style: Styles.textStyle18.copyWith(
-              color: Colors.white,
+              color: textColor?? Colors.white,
             ),
           ),
         ),
