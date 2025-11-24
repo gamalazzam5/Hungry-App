@@ -4,15 +4,16 @@ import 'package:gap/gap.dart';
 import '../../../core/constants/app_colors.dart';
 
 class SpicySlider extends StatelessWidget {
-  const SpicySlider({super.key, required this.value, required this.onChanged});
+  const SpicySlider({super.key, required this.value, required this.onChanged, required this.image});
 final double value;
+final String image;
 final ValueChanged<double> onChanged;
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: .spaceBetween,
       children: [
-        Image.asset('assets/test/pngwing 12.png', width: 120),
+        Image.network(image, width: 120),
         Column(
           children: [
             Text(

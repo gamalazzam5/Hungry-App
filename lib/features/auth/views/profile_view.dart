@@ -38,11 +38,13 @@ class _ProfileViewState extends State<ProfileView> {
   bool isLoadingUpdate = false;
   bool isLoadingLogOut = false;
   bool isGuest = false;
-  Future<void> autoLogin()async{
+
+  Future<void> autoLogin() async {
     final user = await authRepo.autoLogin();
-    setState(()=>isGuest = authRepo.isGuest);
-    if(user !=null) setState(() =>  userModel = user);
+    setState(() => isGuest = authRepo.isGuest);
+    if (user != null) setState(() => userModel = user);
   }
+
   Future<void> getProfileData() async {
     try {
       final user = await authRepo.getProfileData();
@@ -126,247 +128,251 @@ class _ProfileViewState extends State<ProfileView> {
 
   @override
   Widget build(BuildContext context) {
-     if(!isGuest)
-       {
-         return  RefreshIndicator(
-           backgroundColor: Colors.white,
-           color: AppColors.primary,
-           onRefresh: () async {
-             await getProfileData();
-           },
-           child: GestureDetector(
-             onTap: () => FocusScope.of(context).unfocus(),
-             child: Scaffold(
-               backgroundColor: AppColors.primary,
-               appBar: AppBar(
-                 backgroundColor: AppColors.primary,
-                 scrolledUnderElevation: 0,
-                 actions: [
-                   Padding(
-                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                     child: SvgPicture.asset('assets/icon/settings.svg'),
-                   ),
-                 ],
-                 leading: GestureDetector(
-                   onTap: () => context.pop(),
+    if (!isGuest) {
+      return RefreshIndicator(
+        backgroundColor: Colors.white,
+        color: AppColors.primary,
+        onRefresh: () async {
+          await getProfileData();
+        },
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Scaffold(
+            backgroundColor: AppColors.primary,
+            appBar: AppBar(
+              backgroundColor: AppColors.primary,
+              scrolledUnderElevation: 0,
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: SvgPicture.asset('assets/icon/settings.svg'),
+                ),
+              ],
+              leading: GestureDetector(
+                onTap: () => context.pop(),
 
-                   child: Icon(Icons.arrow_back, color: Colors.white),
-                 ),
-               ),
-               body: Padding(
-                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                 child: SingleChildScrollView(
-                   child: Skeletonizer(
-                     enabled: userModel == null,
-                     child: Column(
-                       children: [
-                         Center(
-                           child: Container(
-                             height: 120,
-                             width: 120,
-                             decoration: BoxDecoration(
-                               shape: BoxShape.circle,
-                               color: Colors.grey.shade300,
+                child: Icon(Icons.arrow_back, color: Colors.white),
+              ),
+            ),
+            body: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: SingleChildScrollView(
+                child: Skeletonizer(
+                  enabled: userModel == null,
+                  child: Column(
+                    children: [
+                      Center(
+                        child: Container(
+                          height: 120,
+                          width: 120,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.grey.shade300,
 
-                               border: Border.all(width: 2, color: Colors.white),
-                             ),
-                             child: selectedImage != null
-                                 ? ClipOval(
-                               child: Image.file(
-                                 File(selectedImage!),
-                                 fit: BoxFit.cover,
-                               ),
-                             )
-                                 : (userModel?.image != null &&
-                                 userModel!.image!.isNotEmpty)
-                                 ? ClipOval(
-                               child: Image.network(
-                                 userModel!.image!,
-                                 fit: BoxFit.cover,
-                                 errorBuilder: (context, err, builder) =>
-                                     Icon(Icons.person),
-                               ),
-                             )
-                                 : Icon(Icons.person),
-                           ),
-                         ),
+                            border: Border.all(width: 2, color: Colors.white),
+                          ),
+                          child: selectedImage != null
+                              ? ClipOval(
+                                  child: Image.file(
+                                    File(selectedImage!),
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : (userModel?.image != null &&
+                                    userModel!.image!.isNotEmpty)
+                              ? ClipOval(
+                                  child: Image.network(
+                                    userModel!.image!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, err, builder) =>
+                                        Icon(Icons.person),
+                                  ),
+                                )
+                              : Icon(Icons.person),
+                        ),
+                      ),
 
-                         Gap(10),
-                         Row(
-                           mainAxisAlignment: .center,
-                           children: [
-                             CustomButton(
-                               onTap: pickImage,
-                               text: userModel?.image == null
-                                   ? 'Upload image'
-                                   : 'change image',
-                               width: 150,
-                               height: 40,
-                               borderRadius: 12,
-                               color: Colors.white,
-                               textColor: AppColors.primary,
-                               horizontalPadding: 4,
-                               verticalPadding: 0,
-                               profileEdit: true,
-                               iconData: CupertinoIcons.camera,
-                             ),
-                             Gap(6),
-                             userModel?.image != null
-                                 ? CustomButton(
-                               onTap: () {},
-                               text: 'remove image',
-                               width: 155,
-                               height: 40,
-                               borderRadius: 12,
-                               color: Colors.white,
-                               textColor: AppColors.primary,
-                               horizontalPadding: 4,
-                               verticalPadding: 0,
-                               profileEdit: true,
-                               iconData: CupertinoIcons.delete,
-                             )
-                                 : Gap(6),
-                           ],
-                         ),
-                         Gap(30),
-                         ProfileTextField(controller: _name, labelText: 'Name'),
-                         Gap(25),
-                         ProfileTextField(controller: _email, labelText: 'Email'),
-                         Gap(25),
-                         ProfileTextField(
-                           controller: _address,
-                           labelText: 'Address',
-                         ),
-                         Gap(20),
-                         Divider(),
-                         Gap(10),
-                         userModel?.visa == null
-                             ? ProfileTextField(
-                           controller: _visa,
-                           labelText: 'Add Visa Card',
-                           keyboardType: TextInputType.number,
-                         )
-                             : PaymentTile(
-                           titleColor: const Color(0xFF3C2F2F),
-                           subTitleColor: AppColors.greyColor,
-                           onTap: () {},
-                           title: 'Debit card',
-                           subTitle: userModel?.visa ?? '**** **** **** 0505',
-                           icon: 'assets/icon/visa.png',
-                           tileColor: const Color(0xFFF3F4F6),
-                           value: 'Visa',
-                           groupValue: 'Visa',
-                           onChanged: (v) {},
-                           trailing: Text(
-                             'Default',
-                             style: Styles.boldTextStyle16,
-                           ),
-                         ),
-                         Gap(200),
-                       ],
-                     ),
-                   ),
-                 ),
-               ),
-               bottomSheet: Container(
-                 padding: EdgeInsets.symmetric(horizontal: 8),
-                 height: 70,
-                 decoration: BoxDecoration(
-                   color: Colors.white,
-                   borderRadius: BorderRadius.circular(12),
-                 ),
-                 child: Row(
-                   mainAxisAlignment: .spaceBetween,
-                   children: [
-                     GestureDetector(
-                       onTap: updateProfileData,
-                       child: Container(
-                         padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                         decoration: BoxDecoration(
-                           color: AppColors.primary,
-                           borderRadius: BorderRadius.circular(12),
-                         ),
-                         child: Row(
-                           children: [
-                             isLoadingUpdate
-                                 ? const CupertinoActivityIndicator(
-                               color: Colors.white,
-                             )
-                                 : Text(
-                               'Edit Profile',
-                               style: Styles.textStyle18.copyWith(
-                                 color: Colors.white,
-                               ),
-                             ),
-                             Gap(5),
-                             Icon(Icons.edit_outlined, color: Colors.white),
-                           ],
-                         ),
-                       ),
-                     ),
-                     GestureDetector(
-                       onTap: logout,
-                       child: Container(
-                         padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                         decoration: BoxDecoration(
-                           color: Colors.white,
-                           border: Border.all(color: AppColors.primary),
-                           borderRadius: BorderRadius.circular(12),
-                         ),
-                         child: isLoadingLogOut
-                             ? Center(
-                           child: CupertinoActivityIndicator(
-                             color: AppColors.primary,
-                           ),
-                         )
-                             : Row(
-                           children: [
-                             Text(
-                               'Log out',
-                               style: Styles.textStyle18.copyWith(
-                                 color: AppColors.primary,
-                               ),
-                             ),
-                             Gap(5),
-                             Icon(
-                               Icons.logout_outlined,
-                               color: AppColors.primary,
-                             ),
-                           ],
-                         ),
-                       ),
-                     ),
-                   ],
-                 ),
-               ),
-             ),
-           ),
-         );
-       }
-     else if(isGuest){
-       return Column(
-         mainAxisAlignment: .center,
-         children: [
-           Center(child: Text('Guest Mode'),),
-           Gap(10),
-           CustomButton(
-             onTap: () {
-               GoRouter.of(context).go(AppRoutePaths.loginView);
-             },
-             text: 'Back to Login',
-             width: 150,
-             height: 40 ,
-             borderRadius: 12,
-             color:AppColors.primary,
-             textColor:  Colors.white,
-             horizontalPadding: 6,
-             verticalPadding: 0,
-           ),
-
-         ],
-       );
-     }else{
-       return SizedBox();
-     }
+                      Gap(10),
+                      Row(
+                        mainAxisAlignment: .center,
+                        children: [
+                          CustomButton(
+                            onTap: pickImage,
+                            text: userModel?.image == null
+                                ? 'Upload image'
+                                : 'change image',
+                            width: 150,
+                            height: 40,
+                            borderRadius: 12,
+                            color: Colors.white,
+                            textColor: AppColors.primary,
+                            horizontalPadding: 4,
+                            verticalPadding: 0,
+                            profileEdit: true,
+                            iconData: CupertinoIcons.camera,
+                          ),
+                          Gap(6),
+                          userModel?.image != null
+                              ? CustomButton(
+                                  onTap: () {},
+                                  text: 'remove image',
+                                  width: 155,
+                                  height: 40,
+                                  borderRadius: 12,
+                                  color: Colors.white,
+                                  textColor: AppColors.primary,
+                                  horizontalPadding: 4,
+                                  verticalPadding: 0,
+                                  profileEdit: true,
+                                  iconData: CupertinoIcons.delete,
+                                )
+                              : Gap(6),
+                        ],
+                      ),
+                      Gap(30),
+                      ProfileTextField(controller: _name, labelText: 'Name'),
+                      Gap(25),
+                      ProfileTextField(controller: _email, labelText: 'Email'),
+                      Gap(25),
+                      ProfileTextField(
+                        controller: _address,
+                        labelText: 'Address',
+                      ),
+                      Gap(20),
+                      Divider(),
+                      Gap(10),
+                      userModel?.visa == null
+                          ? ProfileTextField(
+                              controller: _visa,
+                              labelText: 'Add Visa Card',
+                              keyboardType: TextInputType.number,
+                            )
+                          : PaymentTile(
+                              titleColor: const Color(0xFF3C2F2F),
+                              subTitleColor: AppColors.greyColor,
+                              onTap: () {},
+                              title: 'Debit card',
+                              subTitle:
+                                  userModel?.visa ?? '**** **** **** 0505',
+                              icon: 'assets/icon/visa.png',
+                              tileColor: const Color(0xFFF3F4F6),
+                              value: 'Visa',
+                              groupValue: 'Visa',
+                              onChanged: (v) {},
+                              trailing: Text(
+                                'Default',
+                                style: Styles.boldTextStyle16,
+                              ),
+                            ),
+                      Gap(200),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            bottomSheet: Container(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              height: 70,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: .spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: updateProfileData,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          isLoadingUpdate
+                              ? const CupertinoActivityIndicator(
+                                  color: Colors.white,
+                                )
+                              : Text(
+                                  'Edit Profile',
+                                  style: Styles.textStyle18.copyWith(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                          Gap(5),
+                          Icon(Icons.edit_outlined, color: Colors.white),
+                        ],
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: logout,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: AppColors.primary),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: isLoadingLogOut
+                          ? Center(
+                              child: CupertinoActivityIndicator(
+                                color: AppColors.primary,
+                              ),
+                            )
+                          : Row(
+                              children: [
+                                Text(
+                                  'Log out',
+                                  style: Styles.textStyle18.copyWith(
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                                Gap(5),
+                                Icon(
+                                  Icons.logout_outlined,
+                                  color: AppColors.primary,
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    } else if (isGuest) {
+      return Column(
+        mainAxisAlignment: .center,
+        children: [
+          Center(child: Text('Guest Mode')),
+          Gap(10),
+          CustomButton(
+            onTap: () {
+              GoRouter.of(context).go(AppRoutePaths.loginView);
+            },
+            text: 'Back to Login',
+            width: 150,
+            height: 40,
+            borderRadius: 12,
+            color: AppColors.primary,
+            textColor: Colors.white,
+            horizontalPadding: 6,
+            verticalPadding: 0,
+          ),
+        ],
+      );
+    } else {
+      return SizedBox();
+    }
   }
 }
