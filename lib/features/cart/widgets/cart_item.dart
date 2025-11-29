@@ -14,7 +14,8 @@ class CartItem extends StatelessWidget {
     this.onMin,
     this.onRemove,
     required this.number,
-    this.isSkeleton = false,
+    this.isSkeleton = false,  this.isLoadingRemove = false,
+
   });
 
   final String image, text, desc;
@@ -23,7 +24,7 @@ class CartItem extends StatelessWidget {
   final Function()? onRemove;
   final int number;
   final bool isSkeleton;
-
+ final bool isLoadingRemove;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -93,7 +94,7 @@ class CartItem extends StatelessWidget {
               ? Container(width: 25, height: 25, color: Colors.grey[300])
               : GestureDetector(
             onTap: onRemove,
-            child: const Icon(CupertinoIcons.trash, color: Colors.redAccent),
+            child: isLoadingRemove? CupertinoActivityIndicator(color: AppColors.primary,): const Icon(CupertinoIcons.trash, color: Colors.redAccent),
           ),
         ],
       ),

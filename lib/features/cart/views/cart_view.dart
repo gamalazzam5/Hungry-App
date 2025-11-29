@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hungry/core/constants/app_colors.dart';
 import 'package:hungry/core/constants/app_styles.dart';
 import 'package:hungry/core/shared/custom_button.dart';
+import 'package:hungry/core/utils/custom_snack_bar.dart';
 import 'package:hungry/features/cart/data/repos/cart_repo.dart';
 import 'package:hungry/features/cart/widgets/cart_item.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -22,6 +23,19 @@ class _CartViewState extends State<CartView> {
   GetCartResponse? cartResponse;
   CartRepo cartRepo = CartRepo();
   List<int> quantity = [];
+  List<bool> isRemoving = [];
+
+  double calculateTotal() {
+    if (cartResponse == null) return 0;
+
+    double total = 0;
+    for (int i = 0; i < cartResponse!.data.items.length; i++) {
+      final price =
+          double.tryParse(cartResponse!.data.items[i].price.toString()) ?? 0;
+      total += price * quantity[i];
+    }
+    return total;
+  }
 
   Future<void> getCartData() async {
     try {
@@ -29,8 +43,31 @@ class _CartViewState extends State<CartView> {
       setState(() {
         cartResponse = res;
         quantity = List.generate(res.data.items.length, (_) => 1);
+        isRemoving = List.generate(res.data.items.length, (_) => false);
       });
     } catch (_) {}
+  }
+
+  Future<void> removeItemFromCart(int index, int itemId) async {
+    try {
+      setState(() => isRemoving[index] = true);
+
+      await cartRepo.removeItemFromCart(itemId);
+
+      if (!mounted) return;
+      setState(() {
+        cartResponse!.data.items.removeAt(index);
+        quantity.removeAt(index);
+        isRemoving.removeAt(index);
+      });
+
+      AppSnackBar.showSuccess(context, "Item removed successfully");
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => isRemoving[index] = false);
+
+      AppSnackBar.showError(context, e.toString());
+    }
   }
 
   @override
@@ -40,6 +77,7 @@ class _CartViewState extends State<CartView> {
   }
 
   void onAdd(int index) => setState(() => quantity[index]++);
+
   void onMinus(int index) => setState(() {
     if (quantity[index] > 1) quantity[index]--;
   });
@@ -49,10 +87,7 @@ class _CartViewState extends State<CartView> {
     final isLoading = cartResponse == null;
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        toolbarHeight: 0,
-      ),
+      appBar: AppBar(backgroundColor: Colors.white, toolbarHeight: 0),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Skeletonizer(
@@ -66,12 +101,19 @@ class _CartViewState extends State<CartView> {
               return CartItem(
                 isSkeleton: isLoading,
                 text: item?.name ?? "",
-                desc: item?.price ?? "",
+                desc: isLoading
+                    ? ""
+                    : "Spicy level: ${((double.tryParse(item?.spicy.toString() ?? "0") ?? 0) * 100).toStringAsFixed(0)}%",
                 image: item?.image ?? "",
                 number: isLoading ? 1 : quantity[index],
                 onAdd: isLoading ? null : () => onAdd(index),
                 onMin: isLoading ? null : () => onMinus(index),
-                onRemove: isLoading ? null : () {},
+                isLoadingRemove: isLoading ? false : isRemoving[index],
+                onRemove: isLoading
+                    ? null
+                    : () {
+                        removeItemFromCart(index, item!.itemId);
+                      },
               );
             },
           ),
@@ -84,7 +126,9 @@ class _CartViewState extends State<CartView> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.grey.withOpacity(.3),
@@ -100,8 +144,10 @@ class _CartViewState extends State<CartView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("Total Amount", style: Styles.boldTextStyle16),
-                Text("\$${cartResponse?.data.totalPrice ?? "--"}",
-                    style: Styles.boldTextStyle16),
+                Text(
+                  isLoading ? "--" : "\$${calculateTotal().toStringAsFixed(2)}",
+                  style: Styles.boldTextStyle16,
+                ),
               ],
             ),
             CustomButton(

@@ -37,11 +37,13 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
 
   Future<void> getToppings() async {
     final response = await productRepo.getToppings();
+    if (!mounted) return;
     setState(() => toppings = response);
   }
 
   Future<void> getOptions() async {
     final response = await productRepo.getOptions();
+    if (!mounted) return;
     setState(() => options = response);
   }
 
@@ -50,8 +52,8 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
 
   @override
   void initState() {
-    getToppings();
-    getOptions();
+   Future.wait([ getToppings(),
+   getOptions()]);
     super.initState();
   }
 
@@ -243,12 +245,14 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                   await cartRepo.addToCart(
                     CartRequestModel(cartItems: [cartItem]),
                   );
+                  if (!mounted) return;
                   setState(() {
                     cartLoading = false;
                   });
                   if (!mounted) return;
                   AppSnackBar.showSuccess(context, 'Item added to cart');
                 } catch (e) {
+                  if (!mounted) return;
                   setState(() {
                     cartLoading = false;
                   });

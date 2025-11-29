@@ -24,4 +24,15 @@ Future<GetCartResponse> getCartData()async{
       rethrow;
     }
 }
+
+Future<void> removeItemFromCart(int itemId) async{
+
+try{
+    final response = await _apiService.delete('/cart/remove/$itemId');
+    print(response);
+}catch(e){
+    print(e);
+
+}
+}
 }

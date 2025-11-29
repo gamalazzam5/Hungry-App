@@ -26,6 +26,7 @@ class _HomeViewState extends State<HomeView> {
 
   Future<void> getProducts() async {
     final response = await productRepo.getProducts();
+    if(!mounted) return ;
     setState(() {
       products = response;
     });
