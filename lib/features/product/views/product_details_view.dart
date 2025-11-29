@@ -213,13 +213,13 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
         padding: const EdgeInsets.all(14),
         height: 90,
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: .spaceBetween,
           children: [
             Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: .start,
               children: [
                 Text('Total', style: Styles.boldTextStyle20),
-                Text('\$18.9', style: Styles.boldTextStyle20),
+                Text('\$${widget.productModel.price}', style: Styles.boldTextStyle20),
               ],
             ),
 

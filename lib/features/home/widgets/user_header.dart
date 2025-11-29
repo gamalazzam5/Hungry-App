@@ -7,15 +7,16 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_styles.dart';
 
 class UserHeader extends StatelessWidget {
-  const UserHeader({super.key});
-
+  const UserHeader({super.key,  required this.name ,  this.profileImage});
+final String name;
+final String? profileImage;
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: .start,
+          mainAxisAlignment: .center,
           children: [
             SvgPicture.asset(
               "assets/logo/logo.svg",
@@ -24,7 +25,7 @@ class UserHeader extends StatelessWidget {
             ),
             Gap(5),
             Text(
-              'Hello, Gamal Azzam',
+              'Hello, $name',
               style: Styles.textStyle16.copyWith(
                 color: AppColors.greyColor,
                 fontWeight: FontWeight.w500,
@@ -34,10 +35,20 @@ class UserHeader extends StatelessWidget {
         ),
         Spacer(),
         CircleAvatar(
-          radius: 30,
+          radius: 35,
           backgroundColor: AppColors.primary,
-          child: Icon(CupertinoIcons.person, color: Colors.white),
+          child: ClipOval(
+            child: profileImage == null
+                ? Icon(CupertinoIcons.person, color: Colors.white)
+                : Image.network(
+              profileImage!,
+              width: 68,
+              height: 68,
+              fit: BoxFit.cover,
+            ),
+          ),
         ),
+
       ],
     );
   }

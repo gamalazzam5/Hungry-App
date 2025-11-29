@@ -14,29 +14,25 @@ class Root extends StatefulWidget {
 }
 
 class _RootState extends State<Root> {
-  late PageController _pageController;
   late List<Widget> screens;
   int currentIndex = 0;
 
   @override
   void initState() {
-    _pageController = PageController(initialPage: currentIndex);
     screens = [HomeView(), CartView(), OrderHistoryView(), ProfileView()];
     super.initState();
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        physics: NeverScrollableScrollPhysics(),
+      body: IndexedStack(
+        index: currentIndex,
         children: screens,
       ),
 
@@ -54,7 +50,6 @@ class _RootState extends State<Root> {
 
             onTap: (index) {
               setState(() => currentIndex = index);
-              _pageController.jumpToPage(index);
             },
 
             items: const [

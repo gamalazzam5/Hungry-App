@@ -33,7 +33,10 @@ class AppRouter {
       ),
       GoRoute(
         path: AppRoutePaths.checkout,
-        builder: (context, state) => const CheckoutView(),
+        builder: (context, state) {
+          final totalPrice = state.extra as String;
+          return CheckoutView(totalPrice: totalPrice);
+        },
       ),
     ],
   );

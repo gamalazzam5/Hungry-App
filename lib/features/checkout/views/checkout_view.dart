@@ -4,21 +4,51 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungry/core/constants/app_colors.dart';
 import 'package:hungry/core/constants/app_styles.dart';
+import 'package:hungry/features/auth/data/repos/auth_repo.dart';
 import 'package:hungry/features/checkout/widgets/order_details.dart';
 import 'package:hungry/features/checkout/widgets/payment_tile.dart';
 
+import '../../../core/network/api_error.dart';
 import '../../../core/shared/custom_button.dart';
+import '../../../core/utils/custom_snack_bar.dart';
+import '../../auth/data/model/user_model.dart';
 
 class CheckoutView extends StatefulWidget {
-  const CheckoutView({super.key});
+  const CheckoutView({super.key, required this.totalPrice});
+
+  final String totalPrice;
 
   @override
   State<CheckoutView> createState() => _CheckoutViewState();
 }
 
 class _CheckoutViewState extends State<CheckoutView> {
-  String selectedMethod = 'Cash';
 
+  String selectedMethod = 'Cash';
+  bool value = false;
+AuthRepo authRepo = AuthRepo();
+UserModel? userModel;
+  Future<void> getProfileData() async {
+    try {
+      final user = await authRepo.getProfileData();
+      if(!mounted) return;
+      setState(() {
+        userModel = user;
+      });
+    } catch (e) {
+      String errMessage = 'Error in profile';
+      if (e is ApiError) {
+        errMessage = e.message;
+      }
+      if (!mounted) return;
+      AppSnackBar.showError(context, errMessage);
+    }
+  }
+  @override
+  void initState() {
+    getProfileData();
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,11 +61,12 @@ class _CheckoutViewState extends State<CheckoutView> {
             children: [
               const Text('Order Summary', style: Styles.boldTextStyle16),
               const Gap(20),
-              const OrderDetails(
-                order: "18.1",
+              OrderDetails(
+                order: widget.totalPrice,
                 taxes: "1.7",
                 fees: "1.5",
-                total: "20.1",
+                total: (double.parse(widget.totalPrice) + 1.7 + 1.5)
+                    .toStringAsFixed(2),
               ),
               const Gap(24),
               Text('Payment methods', style: Styles.boldTextStyle20),
@@ -55,10 +86,11 @@ class _CheckoutViewState extends State<CheckoutView> {
                 },
               ),
               const Gap(24),
+              userModel?.visa ==null? SizedBox.shrink():
               PaymentTile(
                 onTap: () => setState(() => selectedMethod = 'Visa'),
                 title: 'Debit card',
-                subTitle: '3566 **** **** 0505',
+                subTitle: userModel?.visa,
                 icon: 'assets/icon/visa.png',
                 tileColor: Colors.blue.shade900,
                 value: 'Visa',
@@ -70,12 +102,17 @@ class _CheckoutViewState extends State<CheckoutView> {
                 },
               ),
               Gap(5),
+              userModel?.visa ==null? SizedBox.shrink():
               Row(
                 children: [
                   Checkbox(
-                    activeColor: const Color(0xFFEF2A39),
-                    value: true,
-                    onChanged: (v) {},
+                    activeColor: Colors.lightGreen,
+                    value: value,
+                    onChanged: (v) {
+                      setState(() {
+                        value = v!;
+                      });
+                    },
                   ),
                   Text(
                     'Save card details for future payments',
@@ -114,7 +151,10 @@ class _CheckoutViewState extends State<CheckoutView> {
               crossAxisAlignment: .start,
               children: [
                 Text('Total', style: Styles.boldTextStyle20),
-                Text('\$18.9', style: Styles.boldTextStyle20),
+                Text(
+                  '\$${(double.parse(widget.totalPrice) + 1.7 + 1.5).toStringAsFixed(2)}',
+                  style: Styles.boldTextStyle20,
+                ),
               ],
             ),
             CustomButton(

@@ -1,15 +1,16 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hungry/core/constants/app_colors.dart';
 import 'package:hungry/core/constants/app_styles.dart';
 import 'package:hungry/core/shared/custom_button.dart';
 import 'package:hungry/core/utils/custom_snack_bar.dart';
+import 'package:hungry/features/auth/data/repos/auth_repo.dart';
 import 'package:hungry/features/cart/data/repos/cart_repo.dart';
 import 'package:hungry/features/cart/widgets/cart_item.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/routes/app_router.dart';
+import '../../auth/data/model/user_model.dart';
 import '../data/models/cart_model.dart';
 
 class CartView extends StatefulWidget {
@@ -24,6 +25,15 @@ class _CartViewState extends State<CartView> {
   CartRepo cartRepo = CartRepo();
   List<int> quantity = [];
   List<bool> isRemoving = [];
+  bool isGuest = false;
+  AuthRepo authRepo = AuthRepo();
+  UserModel? userModel;
+
+  Future<void> autoLogin() async {
+    final user = await authRepo.autoLogin();
+    setState(() => isGuest = authRepo.isGuest);
+    if (user != null) setState(() => userModel = user);
+  }
 
   double calculateTotal() {
     if (cartResponse == null) return 0;
@@ -73,6 +83,7 @@ class _CartViewState extends State<CartView> {
   @override
   void initState() {
     getCartData();
+    autoLogin();
     super.initState();
   }
 
@@ -86,79 +97,108 @@ class _CartViewState extends State<CartView> {
   Widget build(BuildContext context) {
     final isLoading = cartResponse == null;
 
-    return Scaffold(
-      appBar: AppBar(backgroundColor: Colors.white, toolbarHeight: 0),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Skeletonizer(
-          enabled: isLoading,
-          child: ListView.builder(
-            padding: const EdgeInsets.only(bottom: 120, top: 30),
-            itemCount: isLoading ? 4 : cartResponse!.data.items.length,
-            itemBuilder: (context, index) {
-              final item = isLoading ? null : cartResponse!.data.items[index];
+    if (!isGuest) {
+      return Scaffold(
+        appBar: AppBar(backgroundColor: Colors.white, toolbarHeight: 0),
+        body: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Skeletonizer(
+            enabled: isLoading,
+            child: ListView.builder(
+              padding: const EdgeInsets.only(bottom: 120, top: 30),
+              itemCount: isLoading ? 4 : cartResponse!.data.items.length,
+              itemBuilder: (context, index) {
+                final item = isLoading ? null : cartResponse!.data.items[index];
 
-              return CartItem(
-                isSkeleton: isLoading,
-                text: item?.name ?? "",
-                desc: isLoading
-                    ? ""
-                    : "Spicy level: ${((double.tryParse(item?.spicy.toString() ?? "0") ?? 0) * 100).toStringAsFixed(0)}%",
-                image: item?.image ?? "",
-                number: isLoading ? 1 : quantity[index],
-                onAdd: isLoading ? null : () => onAdd(index),
-                onMin: isLoading ? null : () => onMinus(index),
-                isLoadingRemove: isLoading ? false : isRemoving[index],
-                onRemove: isLoading
+                return CartItem(
+                  isSkeleton: isLoading,
+                  text: item?.name ?? "",
+                  desc: isLoading
+                      ? ""
+                      : "Spicy level: ${((double.tryParse(item?.spicy.toString() ?? "0") ?? 0) * 100).toStringAsFixed(0)}%",
+                  image: item?.image ?? "",
+                  number: isLoading ? 1 : quantity[index],
+                  onAdd: isLoading ? null : () => onAdd(index),
+                  onMin: isLoading ? null : () => onMinus(index),
+                  isLoadingRemove: isLoading ? false : isRemoving[index],
+                  onRemove: isLoading
+                      ? null
+                      : () {
+                          removeItemFromCart(index, item!.itemId);
+                        },
+                );
+              },
+            ),
+          ),
+        ),
+
+        bottomSheet: Container(
+          height: 80,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(32),
+              topRight: Radius.circular(32),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withValues(alpha: .3),
+                blurRadius: 20,
+                spreadRadius: 5,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Total Amount", style: Styles.boldTextStyle16),
+                  Text(
+                    isLoading
+                        ? "--.--"
+                        : "\$${calculateTotal().toStringAsFixed(2)}",
+                    style: Styles.boldTextStyle16,
+                  ),
+                ],
+              ),
+              CustomButton(
+                text: "Checkout",
+                onTap: isLoading
                     ? null
-                    : () {
-                        removeItemFromCart(index, item!.itemId);
-                      },
-              );
+                    : () => GoRouter.of(context).push(
+                        AppRoutePaths.checkout,
+                        extra: calculateTotal().toStringAsFixed(2),
+                      ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      return Column(
+        mainAxisAlignment: .center,
+        children: [
+          Center(
+            child: Text(
+              'This is guest Mode please Login',
+              style: Styles.boldTextStyle16,
+            ),
+          ),
+          Gap(24),
+          CustomButton(
+            width: 200,
+            height: 50,
+            textColor: Colors.white,
+            onTap: () {
+              GoRouter.of(context).go(AppRoutePaths.loginView);
             },
+            text: 'Go To Login',
           ),
-        ),
-      ),
-
-      bottomSheet: Container(
-        height: 80,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(32),
-            topRight: Radius.circular(32),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(.3),
-              blurRadius: 20,
-              spreadRadius: 5,
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Total Amount", style: Styles.boldTextStyle16),
-                Text(
-                  isLoading ? "--" : "\$${calculateTotal().toStringAsFixed(2)}",
-                  style: Styles.boldTextStyle16,
-                ),
-              ],
-            ),
-            CustomButton(
-              text: "Checkout",
-              onTap: isLoading
-                  ? null
-                  : () => GoRouter.of(context).push(AppRoutePaths.checkout),
-            ),
-          ],
-        ),
-      ),
-    );
+        ],
+      );
+    }
   }
 }
