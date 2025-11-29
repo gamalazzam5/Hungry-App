@@ -1,9 +1,14 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungry/core/constants/app_colors.dart';
 import 'package:hungry/core/constants/app_styles.dart';
 import 'package:hungry/core/shared/custom_button.dart';
+import 'package:hungry/core/utils/custom_snack_bar.dart';
+import 'package:hungry/features/cart/data/models/cart_model.dart';
+import 'package:hungry/features/cart/data/repos/cart_repo.dart';
+import 'package:hungry/features/home/data/models/product_model.dart';
 import 'package:hungry/features/home/data/repos/product_repo.dart';
 import 'package:hungry/features/product/widgets/spicy_slider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -12,9 +17,9 @@ import '../../home/data/models/toppings_model.dart';
 import '../widgets/topping_card.dart';
 
 class ProductDetailsView extends StatefulWidget {
-  const ProductDetailsView({super.key, required this.productImage});
+  const ProductDetailsView({super.key, required this.productModel});
 
-  final String productImage;
+  final ProductModel productModel;
 
   @override
   State<ProductDetailsView> createState() => _ProductDetailsViewState();
@@ -22,11 +27,13 @@ class ProductDetailsView extends StatefulWidget {
 
 class _ProductDetailsViewState extends State<ProductDetailsView> {
   double value = .5;
-  int? selectedToppingIndex;
+  List<int> selectedTopping = [];
+  List<int> selectedOptions = [];
 
   final ProductRepo productRepo = ProductRepo();
   List<ToppingsModel>? toppings;
   List<ToppingsModel>? options;
+  bool cartLoading = false;
 
   Future<void> getToppings() async {
     final response = await productRepo.getToppings();
@@ -37,6 +44,9 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
     final response = await productRepo.getOptions();
     setState(() => options = response);
   }
+
+  ///cart
+  CartRepo cartRepo = CartRepo();
 
   @override
   void initState() {
@@ -65,7 +75,7 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SpicySlider(
-                image: widget.productImage,
+                image: widget.productModel.image,
                 value: value,
                 onChanged: (v) => setState(() => value = v),
               ),
@@ -81,16 +91,17 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                   child: Row(
                     children: List.generate(
                       loadingToppings ? 4 : toppings!.length,
-                          (index) {
+                      (index) {
                         final topping = loadingToppings
                             ? ToppingsModel(
-                          id: 0,
-                          name: 'Loading...',
-                          image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxuutX8HduKl2eiBeqSWo1VdXcOS9UxzsKhQ&s',
-                        )
+                                id: 0,
+                                name: 'Loading...',
+                                image:
+                                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxuutX8HduKl2eiBeqSWo1VdXcOS9UxzsKhQ&s',
+                              )
                             : toppings![index];
 
-                        final isSelected = selectedToppingIndex == index;
+                        final isSelected = selectedTopping.contains(topping.id);
 
                         return Padding(
                           padding: const EdgeInsets.only(right: 8.0),
@@ -98,8 +109,19 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                             imageUrl: topping.image,
                             title: topping.name,
                             onAdd: loadingToppings
-                                ? (){}
-                                : () => setState(() => selectedToppingIndex = index),
+                                ? () {}
+                                : () {
+                                    final id = topping.id;
+                                    if (selectedTopping.contains(id)) {
+                                      setState(() {
+                                        selectedTopping.remove(id);
+                                      });
+                                    } else {
+                                      setState(() {
+                                        selectedTopping.add(id);
+                                      });
+                                    }
+                                  },
                             color: isSelected
                                 ? Colors.green.withOpacity(0.2)
                                 : AppColors.primary.withOpacity(0.1),
@@ -123,16 +145,17 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                   child: Row(
                     children: List.generate(
                       loadingOptions ? 4 : options!.length,
-                          (index) {
+                      (index) {
                         final option = loadingOptions
                             ? ToppingsModel(
-                          id: 0,
-                          name: 'Loading...',
-                          image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxuutX8HduKl2eiBeqSWo1VdXcOS9UxzsKhQ&s',
-                        )
+                                id: 0,
+                                name: 'Loading...',
+                                image:
+                                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxuutX8HduKl2eiBeqSWo1VdXcOS9UxzsKhQ&s',
+                              )
                             : options![index];
 
-                        final isSelected = selectedToppingIndex == index;
+                        final isSelected = selectedOptions.contains(option.id);
 
                         return Padding(
                           padding: const EdgeInsets.only(right: 8.0),
@@ -140,8 +163,19 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                             imageUrl: option.image,
                             title: option.name,
                             onAdd: loadingOptions
-                                ? (){}
-                                : () => setState(() => selectedToppingIndex = index),
+                                ? () {}
+                                : () {
+                                    final id = option.id;
+                                    if (selectedOptions.contains(id)) {
+                                      setState(() {
+                                        selectedOptions.remove(id);
+                                      });
+                                    } else {
+                                      setState(() {
+                                        selectedOptions.add(id);
+                                      });
+                                    }
+                                  },
                             color: isSelected
                                 ? Colors.green.withOpacity(0.2)
                                 : AppColors.primary.withOpacity(0.1),
@@ -186,10 +220,41 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                 Text('\$18.9', style: Styles.boldTextStyle20),
               ],
             ),
+
             CustomButton(
+              withIcon: true,
+              iconData: CupertinoIcons.cart_badge_plus,
+              iconColor: Colors.white,
+              isLoading: cartLoading,
               text: 'Add To Cart',
-              onTap: () {},
-              horizontalPadding: 8,
+              horizontalPadding: 10,
+              onTap: () async {
+                try {
+                  setState(() {
+                    cartLoading = true;
+                  });
+                  final cartItem = CartModel(
+                    productId: int.parse(widget.productModel.id),
+                    quantity: 1,
+                    spicy: value,
+                    toppings: selectedTopping,
+                    sideOptions: selectedOptions,
+                  );
+                  await cartRepo.addToCart(
+                    CartRequestModel(cartItems: [cartItem]),
+                  );
+                  setState(() {
+                    cartLoading = false;
+                  });
+                  if (!mounted) return;
+                  AppSnackBar.showSuccess(context, 'Item added to cart');
+                } catch (e) {
+                  setState(() {
+                    cartLoading = false;
+                  });
+                  AppSnackBar.showError(context, e.toString());
+                }
+              },
             ),
           ],
         ),

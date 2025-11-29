@@ -28,7 +28,7 @@ class AppRouter {
         path: AppRoutePaths.productDetailsView,
         builder: (context, state) {
           final product = state.extra as ProductModel;
-          return ProductDetailsView(productImage: product.image);
+          return ProductDetailsView(productModel: product);
         },
       ),
       GoRoute(

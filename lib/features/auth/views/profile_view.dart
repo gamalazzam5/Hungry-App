@@ -201,14 +201,15 @@ class _ProfileViewState extends State<ProfileView> {
                             text: userModel?.image == null
                                 ? 'Upload image'
                                 : 'change image',
-                            width: 150,
+                            width: 160,
                             height: 40,
                             borderRadius: 12,
                             color: Colors.white,
                             textColor: AppColors.primary,
-                            horizontalPadding: 4,
+                            horizontalPadding: 0,
                             verticalPadding: 0,
-                            profileEdit: true,
+                            withIcon: true,
+                            iconColor: AppColors.primary,
                             iconData: CupertinoIcons.camera,
                           ),
                           Gap(6),
@@ -216,14 +217,15 @@ class _ProfileViewState extends State<ProfileView> {
                               ? CustomButton(
                                   onTap: () {},
                                   text: 'remove image',
-                                  width: 155,
+                                  width: 160,
                                   height: 40,
                                   borderRadius: 12,
                                   color: Colors.white,
                                   textColor: AppColors.primary,
                                   horizontalPadding: 4,
                                   verticalPadding: 0,
-                                  profileEdit: true,
+                                  withIcon: true,
+                            iconColor: AppColors.primary,
                                   iconData: CupertinoIcons.delete,
                                 )
                               : Gap(6),
@@ -269,84 +271,89 @@ class _ProfileViewState extends State<ProfileView> {
                   ),
                 ),
               ),
+            ),bottomSheet: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            height: 70,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
             ),
-            bottomSheet: Container(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              height: 70,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisAlignment: .spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: updateProfileData,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          isLoadingUpdate
-                              ? const CupertinoActivityIndicator(
-                                  color: Colors.white,
-                                )
-                              : Text(
-                                  'Edit Profile',
-                                  style: Styles.textStyle18.copyWith(
-                                    color: Colors.white,
-                                  ),
-                                ),
-                          Gap(5),
-                          Icon(Icons.edit_outlined, color: Colors.white),
-                        ],
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+
+                /// ------- EDIT PROFILE BUTTON -------
+                GestureDetector(
+                  onTap: isLoadingUpdate ? null : updateProfileData,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: SizedBox(
+                      width: 120,
+                      height: 20,
+                      child: Center(
+                        child: isLoadingUpdate
+                            ? const CupertinoActivityIndicator(color: Colors.white)
+                            : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Edit Profile',
+                              style: Styles.textStyle18.copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            const Icon(Icons.edit_outlined, color: Colors.white),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                  GestureDetector(
-                    onTap: logout,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: AppColors.primary),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: isLoadingLogOut
-                          ? Center(
-                              child: CupertinoActivityIndicator(
+                ),
+
+
+                /// ------- LOGOUT BUTTON -------
+                GestureDetector(
+                  onTap: isLoadingLogOut ? null : logout,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: AppColors.primary),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: SizedBox(
+                      width: 120,
+                      height: 20,
+                      child: Center(
+                        child: isLoadingLogOut
+                            ? CupertinoActivityIndicator(color: AppColors.primary)
+                            : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Log out',
+                              style: Styles.textStyle18.copyWith(
                                 color: AppColors.primary,
                               ),
-                            )
-                          : Row(
-                              children: [
-                                Text(
-                                  'Log out',
-                                  style: Styles.textStyle18.copyWith(
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                                Gap(5),
-                                Icon(
-                                  Icons.logout_outlined,
-                                  color: AppColors.primary,
-                                ),
-                              ],
                             ),
+                            const SizedBox(width: 5),
+                            Icon(Icons.logout_outlined, color: AppColors.primary),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          )
           ),
         ),
       );

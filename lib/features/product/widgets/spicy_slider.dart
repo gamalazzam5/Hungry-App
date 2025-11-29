@@ -24,7 +24,7 @@ final ValueChanged<double> onChanged;
               onChanged: onChanged,
               inactiveColor: Colors.grey.shade300,
               activeColor: AppColors.primary,
-              min: 0,
+              min: .1,
               max: 1,
             ),
             Row(
