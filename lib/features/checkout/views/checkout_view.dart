@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:hungry/core/constants/app_colors.dart';
 import 'package:hungry/core/constants/app_styles.dart';
 import 'package:hungry/features/auth/data/repos/auth_repo.dart';
+import 'package:hungry/features/cart/data/models/cart_model.dart';
+import 'package:hungry/features/checkout/data/models/Items.dart';
+import 'package:hungry/features/checkout/data/repos/order_repo.dart';
 import 'package:hungry/features/checkout/widgets/order_details.dart';
 import 'package:hungry/features/checkout/widgets/payment_tile.dart';
 
@@ -12,26 +15,38 @@ import '../../../core/network/api_error.dart';
 import '../../../core/shared/custom_button.dart';
 import '../../../core/utils/custom_snack_bar.dart';
 import '../../auth/data/model/user_model.dart';
+import '../data/models/Order_model.dart';
+import '../widgets/success_dialog.dart';
 
 class CheckoutView extends StatefulWidget {
-  const CheckoutView({super.key, required this.totalPrice});
+  const CheckoutView({
+    super.key,
+    required this.totalPrice,
+    required this.items,
+    required this.quantities,
+  });
 
   final String totalPrice;
+  final List<CartItemModel> items;
+  final List<int> quantities;
 
   @override
   State<CheckoutView> createState() => _CheckoutViewState();
 }
 
 class _CheckoutViewState extends State<CheckoutView> {
-
   String selectedMethod = 'Cash';
   bool value = false;
-AuthRepo authRepo = AuthRepo();
-UserModel? userModel;
+  AuthRepo authRepo = AuthRepo();
+  UserModel? userModel;
+  OrderRepo orderRepo = OrderRepo();
+  bool isLoading = false;
+  bool isOrdered = false;
+
   Future<void> getProfileData() async {
     try {
       final user = await authRepo.getProfileData();
-      if(!mounted) return;
+      if (!mounted) return;
       setState(() {
         userModel = user;
       });
@@ -44,11 +59,41 @@ UserModel? userModel;
       AppSnackBar.showError(context, errMessage);
     }
   }
+
+  Future<bool> saveOrder() async {
+    final items = List<Items>.generate(widget.items.length, (index) {
+      final product = widget.items[index];
+      final qty = widget.quantities[index];
+      return Items(
+        productId: product.productId,
+        quantity: qty,
+        spicy: double.tryParse(product.spicy.toString()) ?? 0,
+        toppings: product.toppings.map((e) => e.id).toList(),
+        sideOptions: product.sideOptions.map((e) => e.id).toList(),
+      );
+    });
+    final order = OrderModel(items: items);
+    try {
+      setState(() => isLoading = true);
+      await orderRepo.sendOrder(order);
+      if (!mounted) return false;
+      setState(() => isLoading = false);
+      AppSnackBar.showSuccess(context, 'Order Placed Successfully');
+      return true;
+    } catch (e) {
+      if (!mounted) return false;
+      setState(() => isLoading = false);
+      AppSnackBar.showError(context, e.toString());
+      return false;
+    }
+  }
+
   @override
   void initState() {
     getProfileData();
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,42 +131,44 @@ UserModel? userModel;
                 },
               ),
               const Gap(24),
-              userModel?.visa ==null? SizedBox.shrink():
-              PaymentTile(
-                onTap: () => setState(() => selectedMethod = 'Visa'),
-                title: 'Debit card',
-                subTitle: userModel?.visa,
-                icon: 'assets/icon/visa.png',
-                tileColor: Colors.blue.shade900,
-                value: 'Visa',
-                groupValue: selectedMethod,
-                onChanged: (v) {
-                  setState(() {
-                    selectedMethod = v!;
-                  });
-                },
-              ),
-              Gap(5),
-              userModel?.visa ==null? SizedBox.shrink():
-              Row(
-                children: [
-                  Checkbox(
-                    activeColor: Colors.lightGreen,
-                    value: value,
-                    onChanged: (v) {
-                      setState(() {
-                        value = v!;
-                      });
-                    },
-                  ),
-                  Text(
-                    'Save card details for future payments',
-                    style: Styles.textStyle14.copyWith(
-                      color: AppColors.greyColor,
+              userModel?.visa == null
+                  ? SizedBox.shrink()
+                  : PaymentTile(
+                      onTap: () => setState(() => selectedMethod = 'Visa'),
+                      title: 'Debit card',
+                      subTitle: userModel?.visa,
+                      icon: 'assets/icon/visa.png',
+                      tileColor: Colors.blue.shade900,
+                      value: 'Visa',
+                      groupValue: selectedMethod,
+                      onChanged: (v) {
+                        setState(() {
+                          selectedMethod = v!;
+                        });
+                      },
                     ),
-                  ),
-                ],
-              ),
+              Gap(5),
+              userModel?.visa == null
+                  ? SizedBox.shrink()
+                  : Row(
+                      children: [
+                        Checkbox(
+                          activeColor: Colors.lightGreen,
+                          value: value,
+                          onChanged: (v) {
+                            setState(() {
+                              value = v!;
+                            });
+                          },
+                        ),
+                        Text(
+                          'Save card details for future payments',
+                          style: Styles.textStyle14.copyWith(
+                            color: AppColors.greyColor,
+                          ),
+                        ),
+                      ],
+                    ),
               Gap(200),
             ],
           ),
@@ -158,68 +205,21 @@ UserModel? userModel;
               ],
             ),
             CustomButton(
+              iconData: CupertinoIcons.money_dollar_circle,
+              isLoading: isLoading,
+
               text: 'Pay now',
-              onTap: () {
+              withIcon: true,
+              onTap: () async {
+                isOrdered ? Navigator.pop(context) : null;
+                final success = await saveOrder();
+                if (!success) return;
+                setState(() => isOrdered = true);
+                if (!mounted) return;
                 showDialog(
                   context: context,
                   builder: (context) {
-                    return Dialog(
-                      backgroundColor: Colors.transparent,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 180,
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withValues(alpha: .4),
-                                spreadRadius: 5,
-                                blurRadius: 7,
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              CircleAvatar(
-                                radius: 40,
-                                backgroundColor: AppColors.primary,
-                                child: Icon(
-                                  CupertinoIcons.check_mark,
-                                  color: Colors.white,
-                                  size: 30,
-                                ),
-                              ),
-                              Gap(10),
-                              Text(
-                                'Success !',
-                                style: Styles.boldTextStyle24.copyWith(
-                                  color: AppColors.primary,
-                                  fontSize: 30,
-                                ),
-                              ),
-                              Gap(8),
-                              Text(
-                                'Your payment was successful\nA receipt for this purchase has\n been sent to your email.',
-                                style: Styles.textStyle12.copyWith(
-                                  color: Colors.grey.shade500,
-                                ),
-                              ),
-                              Gap(20),
-                              CustomButton(
-                                text: "Close",
-                                onTap: () => context.pop(),
-                                width: 200,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
+                    return successDialog(context);
                   },
                 );
               },

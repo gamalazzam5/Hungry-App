@@ -34,8 +34,12 @@ class AppRouter {
       GoRoute(
         path: AppRoutePaths.checkout,
         builder: (context, state) {
-          final totalPrice = state.extra as String;
-          return CheckoutView(totalPrice: totalPrice);
+          final data = state.extra as Map<String, dynamic>;
+          return CheckoutView(
+            totalPrice: data['totalPrice'],
+            items: data['items'],
+            quantities: data['quantities'],
+          );
         },
       ),
     ],

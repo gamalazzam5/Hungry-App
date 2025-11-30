@@ -1,12 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:hungry/core/shared/custom_button.dart';
+import 'package:hungry/features/orderHistory/data/repos/order_history_repo.dart';
 
 import '../../../core/constants/app_styles.dart';
+import '../data/models/order_history.dart';
 
-class OrderHistoryView extends StatelessWidget {
+class OrderHistoryView extends StatefulWidget {
   const OrderHistoryView({super.key});
 
+  @override
+  State<OrderHistoryView> createState() => _OrderHistoryViewState();
+}
+
+class _OrderHistoryViewState extends State<OrderHistoryView> {
+  OrderHistoryRepo orderHistoryRepo = OrderHistoryRepo();
+  List<OrderHistory> orders = [];
+  Future<void> getOrderHistory()async {
+    try{
+       orders = await orderHistoryRepo.getOrderHistory();
+       setState(() {});
+
+    }catch(e){
+         print(e.toString());
+    }
+
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,8 +38,9 @@ body: Padding(
   padding: const EdgeInsets.symmetric(horizontal: 16.0),
   child: ListView.builder(
     padding: EdgeInsets.only(bottom: 120, top: 30),
-    itemCount: 3,
+    itemCount: orders.length,
     itemBuilder: (context, index) {
+      final order = orders[index];
       return Card(
         color: Colors.white,
         child: Padding(
@@ -33,7 +53,7 @@ body: Padding(
                   Column(
                     crossAxisAlignment: .start,
                     children: [
-                      Image.asset('assets/test/image 6.png', height: 102, width: 110),
+                      Image.network(order.image, height: 102, width: 110),
 
                     ],
                   ),

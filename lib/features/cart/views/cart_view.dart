@@ -170,7 +170,12 @@ class _CartViewState extends State<CartView> {
                     ? null
                     : () => GoRouter.of(context).push(
                         AppRoutePaths.checkout,
-                        extra: calculateTotal().toStringAsFixed(2),
+                        extra: {
+                          'totalPrice': calculateTotal().toStringAsFixed(2),
+                          'items': cartResponse!.data.items,
+                          'quantities': quantity,
+                        },
+
                       ),
               ),
             ],
