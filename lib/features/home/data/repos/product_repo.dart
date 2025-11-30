@@ -52,4 +52,16 @@ class ProductRepo {
     }
   }
 
+  Future<List<ProductModel>> searchProduct(String productName)async {
+    try{
+      final response = await _apiService.get('/products',queryParameters:{'name':productName} );
+      return (response['data'] as List)
+          .map((product) => ProductModel.fromJson(product))
+          .toList();
+      } on DioException catch (e) {
+      print("DIO ERROR: ${e.message}");
+      return [];
+    }
+  }
+
 }
