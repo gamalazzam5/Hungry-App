@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hungry/core/constants/app_colors.dart';
 import 'package:hungry/core/routes/app_router.dart';
 import 'package:hungry/features/auth/data/repos/auth_repo_impl.dart';
+import '../../auth/data/repos/auth_repo.dart';
 import '../widgets/splash_animation_controller.dart';
 
 class SplashView extends StatefulWidget {
