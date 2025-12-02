@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hungry/core/constants/app_styles.dart';
 import 'package:hungry/core/shared/custom_button.dart';
 import 'package:hungry/core/utils/custom_snack_bar.dart';
-import 'package:hungry/features/auth/data/repos/auth_repo.dart';
+import 'package:hungry/features/auth/data/repos/auth_repo_impl.dart';
 import 'package:hungry/features/cart/data/repos/cart_repo.dart';
 import 'package:hungry/features/cart/widgets/cart_item.dart';
 import 'package:skeletonizer/skeletonizer.dart';

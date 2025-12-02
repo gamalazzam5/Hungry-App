@@ -7,7 +7,7 @@ import 'package:hungry/core/constants/app_styles.dart';
 import 'package:hungry/core/network/api_error.dart';
 import 'package:hungry/core/shared/custom_text_field.dart';
 import 'package:hungry/core/utils/custom_snack_bar.dart';
-import 'package:hungry/features/auth/data/repos/auth_repo.dart';
+import 'package:hungry/features/auth/data/repos/auth_repo_impl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routes/app_router.dart';
 import '../widgets/custom_btn.dart';

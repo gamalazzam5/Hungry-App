@@ -18,7 +18,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../checkout/widgets/payment_tile.dart';
-import '../data/repos/auth_repo.dart';
+import '../data/repos/auth_repo_impl.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});

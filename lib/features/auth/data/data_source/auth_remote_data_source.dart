@@ -1,6 +1,6 @@
 import '../model/user_model.dart';
 
-abstract class AuthRepo {
+abstract class AuthRemoteDataSource {
   Future<UserModel?> login(String email, String password);
 
   Future<UserModel?> signup(String name, String email, String password);
@@ -16,14 +16,4 @@ abstract class AuthRepo {
   });
 
   Future<void> logout();
-
-  Future<UserModel?> autoLogin();
-
-  Future<void> continueAsGuest();
-
-  bool get isLoggedIn;
-
-  bool get isGuest;
-
-  UserModel? get currentUser;
 }
