@@ -26,7 +26,7 @@ class _OrderHistoryViewState extends State<OrderHistoryView> {
 
   @override
   void initState() {
-    loadOrders();
+    // loadOrders();
     super.initState();
   }
 

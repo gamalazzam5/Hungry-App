@@ -120,7 +120,7 @@ class AuthRepo {
     _currentUser = null;
     _token = null;
     await PrefHelpers.clearToken();
-    await continueAsGuest(); // auto guest after logout
+    //await continueAsGuest(); // auto guest after logout
   }
 
   // --------- AUTO LOGIN ----------

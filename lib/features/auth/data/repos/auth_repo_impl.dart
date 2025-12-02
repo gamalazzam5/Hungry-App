@@ -62,30 +62,14 @@ class AuthRepoImpl implements AuthRepo {
   }
 
   @override
-  Future<UserModel?> autoLogin() async {
+  Future<String?> autoLogin() async {
     _token = await PrefHelpers.getToken();
-
     if (_token == null) {
-      await continueAsGuest();
       return null;
     }
-
-    if (_token == 'guest') {
-      _currentUser = null;
-      return null;
-    }
-
-    try {
-      final user = await getProfileData();
-      return user;
-    } catch (_) {
-      await PrefHelpers.clearToken();
-      await continueAsGuest();
-      return null;
-    }
+    return _token;
   }
-
-  @override
+    @override
   Future<void> continueAsGuest() async {
     await PrefHelpers.saveToken('guest');
     _token = 'guest';

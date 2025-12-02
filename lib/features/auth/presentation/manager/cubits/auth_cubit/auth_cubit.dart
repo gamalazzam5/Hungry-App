@@ -17,11 +17,13 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> autoLogin() async {
     emit(AuthLoading());
     try {
-      final user = await authRepo.autoLogin();
-      if (user != null) {
-        emit(AuthAuthenticated(user: user));
-      } else {
+      final token = await authRepo.autoLogin();
+      if (isGuest) {
         emit(AuthGuest());
+      } else if (isLoggedIn) {
+        emit(AuthAuthenticated());
+      } else {
+        emit(AuthFailure(message: "Login failed: Invalid credentials"));
       }
     } catch (e) {
       emit(AuthFailure(message: e.toString()));
@@ -35,7 +37,7 @@ class AuthCubit extends Cubit<AuthState> {
       final user = await authRepo.login(email, password);
 
       if (user != null) {
-        emit(AuthAuthenticated(user: user));
+        emit(AuthAuthenticated());
       } else {
         emit(AuthFailure(message: "Login failed: Invalid credentials"));
       }
@@ -53,7 +55,7 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       final user = await authRepo.signup(name, email, password);
       if (user != null) {
-        emit(AuthAuthenticated(user: user));
+        emit(AuthAuthenticated());
       } else {
         emit(AuthFailure(message: "Signup failed: Invalid credentials"));
       }
@@ -73,7 +75,6 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> continueAsGuest() async {
-    emit(AuthLoading());
     try {
       await authRepo.continueAsGuest();
       emit(AuthGuest());
@@ -87,12 +88,11 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       final user = await authRepo.getProfileData();
       if (user != null) {
-        emit(AuthAuthenticated(user: user));
+        emit(AuthProfileData(user: user));
       } else {
         emit(AuthFailure(message: "Failed to get profile data"));
       }
     } catch (e) {
-
       emit(AuthFailure(message: e.toString()));
     }
   }

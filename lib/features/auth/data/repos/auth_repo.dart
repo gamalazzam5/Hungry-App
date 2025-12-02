@@ -17,7 +17,7 @@ abstract class AuthRepo {
 
   Future<void> logout();
 
-  Future<UserModel?> autoLogin();
+  Future<String?> autoLogin();
 
   Future<void> continueAsGuest();
 

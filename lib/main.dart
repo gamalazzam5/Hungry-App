@@ -6,18 +6,24 @@ import 'package:hungry/core/network/api_service.dart';
 import 'package:hungry/core/network/dio_client.dart';
 import 'package:hungry/core/routes/app_router.dart';
 import 'package:hungry/core/utils/service_locator.dart';
+import 'package:hungry/core/utils/simple_bloc_observer.dart';
 import 'package:hungry/features/auth/data/data_source/auth_remote_data_source_impl.dart';
 import 'package:hungry/features/auth/data/repos/auth_repo.dart';
 import 'package:hungry/features/auth/data/repos/auth_repo_impl.dart';
 import 'package:hungry/features/auth/presentation/manager/cubits/auth_cubit/auth_cubit.dart';
 
+import 'core/utils/pref_helpers.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   setUpServiceLocator();
+  Bloc.observer = SimpleBlocObserver();
+  print(await PrefHelpers.getToken());
+
   runApp(
     BlocProvider(
-      create: (context) => getIt<AuthCubit>()..autoLogin(),
+      create: (context) => getIt<AuthCubit>(),
       child: const MyApp(),
     ),
   );

@@ -1,10 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hungry/core/constants/app_colors.dart';
 import 'package:hungry/core/constants/app_styles.dart';
-import 'package:hungry/features/auth/data/repos/auth_repo_impl.dart';
 import 'package:hungry/features/cart/data/models/cart_model.dart';
 import 'package:hungry/features/checkout/data/models/Items.dart';
 import 'package:hungry/features/checkout/data/repos/order_repo.dart';

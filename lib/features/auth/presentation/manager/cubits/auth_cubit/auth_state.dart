@@ -13,14 +13,19 @@ final class AuthFailure extends AuthState {
 }
 
 final class AuthAuthenticated extends AuthState {
-  final UserModel user;
 
-  AuthAuthenticated({required this.user});
+
+  AuthAuthenticated();
 }
 final class AuthProfileUpdated extends AuthState {
   final UserModel user;
 
   AuthProfileUpdated({required this.user});
+}
+final class AuthProfileData extends AuthState {
+  final UserModel user;
+
+  AuthProfileData({required this.user});
 }
 
 final class AuthGuest extends AuthState {}

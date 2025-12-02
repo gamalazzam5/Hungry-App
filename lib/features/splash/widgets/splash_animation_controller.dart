@@ -6,8 +6,10 @@ class SplashAnimationController {
   late final Animation<double> logoOpacity;
   late final Animation<double> logoScale;
   late final Animation<double> imageOpacity;
+  late Future<void> completeFuture;
 
   SplashAnimationController({required this.vsync}) {
+
     controller = AnimationController(
       vsync: vsync,
       duration: const Duration(seconds: 2),
@@ -31,7 +33,9 @@ class SplashAnimationController {
     );
   }
 
-  void start() => controller.forward();
+  void start() {
+    completeFuture = controller.forward();
+  }
 
   void dispose() => controller.dispose();
 }
