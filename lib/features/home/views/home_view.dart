@@ -14,6 +14,7 @@ import '../../../core/network/api_error.dart';
 import '../../../core/utils/custom_snack_bar.dart';
 import '../../auth/data/model/user_model.dart';
 import '../../auth/data/repos/auth_repo_impl.dart';
+import '../../auth/data/repos/old_version_repo.dart';
 import '../widgets/user_header.dart';
 
 class HomeView extends StatefulWidget {

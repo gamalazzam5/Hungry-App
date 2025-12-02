@@ -13,12 +13,12 @@ import 'package:hungry/core/routes/app_router.dart';
 import 'package:hungry/core/shared/custom_button.dart';
 import 'package:hungry/core/utils/custom_snack_bar.dart';
 import 'package:hungry/features/auth/data/model/user_model.dart';
-import 'package:hungry/features/auth/widgets/profile_text_field.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-import '../../checkout/widgets/payment_tile.dart';
-import '../data/repos/auth_repo_impl.dart';
+import '../../../checkout/widgets/payment_tile.dart';
+import '../../data/repos/old_version_repo.dart';
+import '../widgets/profile_text_field.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});

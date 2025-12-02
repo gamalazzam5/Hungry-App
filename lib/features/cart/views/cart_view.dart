@@ -12,6 +12,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/routes/app_router.dart';
 import '../../auth/data/model/user_model.dart';
+import '../../auth/data/repos/old_version_repo.dart';
 import '../data/models/cart_model.dart';
 
 class CartView extends StatefulWidget {

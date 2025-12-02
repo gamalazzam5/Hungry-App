@@ -1,11 +1,12 @@
-import 'package:hungry/features/auth/views/login_view.dart';
-import 'package:hungry/features/auth/views/signup_view.dart';
 import 'package:hungry/features/checkout/views/checkout_view.dart';
 import 'package:hungry/features/home/data/models/product_model.dart';
 import 'package:hungry/features/product/views/product_details_view.dart';
 import 'package:hungry/root.dart';
 import 'package:hungry/features/splash/views/splash_view.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../features/auth/presentation/views/login_view.dart';
+import '../../features/auth/presentation/views/signup_view.dart';
 
 class AppRouter {
   static final router = GoRouter(

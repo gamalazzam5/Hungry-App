@@ -6,12 +6,13 @@ import 'package:go_router/go_router.dart';
 import 'package:hungry/core/routes/app_router.dart';
 import 'package:hungry/core/utils/custom_snack_bar.dart';
 import 'package:hungry/features/auth/data/repos/auth_repo_impl.dart';
-import 'package:hungry/features/auth/widgets/custom_btn.dart';
 
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_styles.dart';
-import '../../../core/network/api_error.dart';
-import '../../../core/shared/custom_text_field.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_styles.dart';
+import '../../../../core/network/api_error.dart';
+import '../../../../core/shared/custom_text_field.dart';
+import '../../data/repos/old_version_repo.dart';
+import '../widgets/custom_btn.dart';
 
 class SignupView extends StatefulWidget {
   const SignupView({super.key});
