@@ -1,17 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungry/core/constants/app_styles.dart';
-import 'package:hungry/core/network/api_error.dart';
 import 'package:hungry/core/shared/custom_text_field.dart';
 import 'package:hungry/core/utils/custom_snack_bar.dart';
-import 'package:hungry/features/auth/data/repos/auth_repo_impl.dart';
+import 'package:hungry/features/auth/presentation/manager/cubits/auth_cubit/auth_cubit.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_router.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/routes/app_router.dart';
+import '../../../../core/utils/service_locator.dart';
 import '../widgets/custom_btn.dart';
 
 class LoginView extends StatefulWidget {
@@ -25,33 +24,7 @@ class _LoginViewState extends State<LoginView> {
   late TextEditingController emailController;
   late TextEditingController passwordController;
   late GlobalKey<FormState> formKey;
-  AuthRepo authRepo = AuthRepo();
-  bool isLoading = false;
-
-  Future<void> login() async {
-    setState(() => isLoading = true);
-
-    try {
-      final user = await authRepo.login(
-        emailController.text.trim(),
-        passwordController.text.trim(),
-      );
-      if (user != null) {
-        if (!mounted) return;
-        AppSnackBar.showSuccess(context, 'Login Successful');
-        GoRouter.of(context).go(AppRoutePaths.root);
-      }
-    } catch (e) {
-      setState(() => isLoading = false);
-      String errMessage = 'Unhandled error';
-      if (e is ApiError) {
-        errMessage = e.message;
-      }
-      if (mounted) {
-        AppSnackBar.showError(context, errMessage);
-      }
-    }
-  }
+  late AuthCubit authCubit;
 
   @override
   void initState() {
@@ -59,6 +32,7 @@ class _LoginViewState extends State<LoginView> {
     emailController = TextEditingController();
     passwordController = TextEditingController();
     formKey = GlobalKey<FormState>();
+    authCubit = getIt<AuthCubit>();
   }
 
   @override
@@ -113,7 +87,7 @@ class _LoginViewState extends State<LoginView> {
                             }
 
                             final regex = RegExp(
-                              r'^[\w\.-]+@([\w-]+\.)+[\w-]{2,4}$',
+                              r'^[\w.-]+@([\w-]+\.)+[\w-]{2,4}$',
                             );
                             if (!regex.hasMatch(value.trim())) {
                               return 'Invalid email format';
@@ -133,20 +107,37 @@ class _LoginViewState extends State<LoginView> {
                         ),
 
                         const Gap(25),
-                        isLoading
-                            ? const CupertinoActivityIndicator(
+                        BlocConsumer<AuthCubit, AuthState>(
+                          listener: (context, state) {
+                            if (state is AuthAuthenticated ||
+                                state is AuthGuest) {
+                              GoRouter.of(context).go(AppRoutePaths.root);
+                            } else if (state is AuthFailure) {
+                              AppSnackBar.showError(context, state.message);
+                            }
+                          },
+                          builder: (context, state) {
+                            if (state is AuthLoading) {
+                              return CupertinoActivityIndicator(
                                 color: AppColors.primary,
-                              )
-                            : CustomAuthBtn(
+                              );
+                            } else {
+                              return CustomAuthBtn(
                                 color: AppColors.primary,
                                 textColor: Colors.white,
                                 onTap: () {
                                   if (formKey.currentState!.validate()) {
-                                    login();
+                                    authCubit.login(
+                                      email: emailController.text,
+                                      password: passwordController.text,
+                                    );
                                   }
                                 },
                                 text: 'Login',
-                              ),
+                              );
+                            }
+                          },
+                        ),
 
                         const Gap(10),
 
@@ -163,7 +154,7 @@ class _LoginViewState extends State<LoginView> {
 
                           child: TextButton(
                             onPressed: () {
-                              GoRouter.of(context).push(AppRoutePaths.root);
+                              authCubit.continueAsGuest();
                             },
                             child: Text(
                               'Continue as a Guest ?',

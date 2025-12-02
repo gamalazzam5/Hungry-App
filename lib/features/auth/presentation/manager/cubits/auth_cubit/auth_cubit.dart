@@ -92,6 +92,7 @@ class AuthCubit extends Cubit<AuthState> {
         emit(AuthFailure(message: "Failed to get profile data"));
       }
     } catch (e) {
+
       emit(AuthFailure(message: e.toString()));
     }
   }

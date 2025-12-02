@@ -1,10 +1,26 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hungry/core/network/api_service.dart';
+import 'package:hungry/core/network/dio_client.dart';
 import 'package:hungry/core/routes/app_router.dart';
-void main() async{
+import 'package:hungry/core/utils/service_locator.dart';
+import 'package:hungry/features/auth/data/data_source/auth_remote_data_source_impl.dart';
+import 'package:hungry/features/auth/data/repos/auth_repo.dart';
+import 'package:hungry/features/auth/data/repos/auth_repo_impl.dart';
+import 'package:hungry/features/auth/presentation/manager/cubits/auth_cubit/auth_cubit.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  runApp(const MyApp());
+  setUpServiceLocator();
+  runApp(
+    BlocProvider(
+      create: (context) => getIt<AuthCubit>()..autoLogin(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
