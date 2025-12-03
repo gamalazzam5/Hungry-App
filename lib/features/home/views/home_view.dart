@@ -36,7 +36,7 @@ class _HomeViewState extends State<HomeView> {
   AuthRepo authRepo = AuthRepo();
   UserModel? userModel;
   late AuthCubit authCubit;
-
+  late bool isGuest;
   Future<void> getProducts() async {
     final response = await productRepo.getProducts();
     if (!mounted) return;
@@ -50,7 +50,8 @@ class _HomeViewState extends State<HomeView> {
   void initState() {
     getProducts();
     authCubit = BlocProvider.of<AuthCubit>(context);
-    authCubit.getProfileData();
+    isGuest = authCubit.isGuest;
+    !isGuest? authCubit.getProfileData():null;
 
     super.initState();
   }
@@ -67,11 +68,11 @@ class _HomeViewState extends State<HomeView> {
           });
         }
       },
-      child: RefreshIndicator(
+      child:  RefreshIndicator(
         backgroundColor: Colors.white,
         color: AppColors.primary,
         onRefresh: () async {
-          await authCubit.getProfileData();
+          !isGuest? await authCubit.getProfileData():null;
         },
         child: GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
@@ -91,7 +92,7 @@ class _HomeViewState extends State<HomeView> {
                     child: Column(
                       children: [
                         Skeletonizer(
-                          enabled: userModel == null,
+                          enabled: userModel == null && !isGuest,
                           child: UserHeader(
                             name: userModel?.name ?? 'Guest',
                             profileImage: userModel?.image,

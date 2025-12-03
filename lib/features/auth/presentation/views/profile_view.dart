@@ -326,13 +326,13 @@ class _ProfileViewState extends State<ProfileView> {
                                 }
                               },
                               builder: (context, state) {
-                                if (state is AuthLoading) {
+                                if (state is AuthLogOutLoading) {
                                   return const CupertinoActivityIndicator(
                                     color: AppColors.primary,
                                   );
                                 } else {
                                   return Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisAlignment: .center,
                                     children: [
                                       Text(
                                         'Log out',
