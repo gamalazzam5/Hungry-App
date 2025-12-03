@@ -1,23 +1,21 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungry/core/constants/app_colors.dart';
 import 'package:hungry/core/constants/app_styles.dart';
-import 'package:hungry/core/network/api_error.dart';
 import 'package:hungry/core/routes/app_router.dart';
 import 'package:hungry/core/shared/custom_button.dart';
 import 'package:hungry/core/utils/custom_snack_bar.dart';
 import 'package:hungry/features/auth/data/model/user_model.dart';
+import 'package:hungry/features/auth/presentation/manager/cubits/auth_cubit/auth_cubit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-
 import '../../../checkout/widgets/payment_tile.dart';
-import '../../data/repos/old_version_repo.dart';
 import '../widgets/profile_text_field.dart';
 
 class ProfileView extends StatefulWidget {
@@ -33,61 +31,7 @@ class _ProfileViewState extends State<ProfileView> {
   final TextEditingController _address = TextEditingController();
   final TextEditingController _visa = TextEditingController();
   UserModel? userModel;
-  AuthRepo authRepo = AuthRepo();
   String? selectedImage;
-  bool isLoadingUpdate = false;
-  bool isLoadingLogOut = false;
-  bool isGuest = false;
-
-  Future<void> autoLogin() async {
-    final user = await authRepo.autoLogin();
-    setState(() => isGuest = authRepo.isGuest);
-    if (user != null) setState(() => userModel = user);
-  }
-
-  Future<void> getProfileData() async {
-    try {
-      final user = await authRepo.getProfileData();
-      setState(() {
-        userModel = user;
-      });
-    } catch (e) {
-      String errMessage = 'Error in profile';
-      if (e is ApiError) {
-        errMessage = e.message;
-      }
-      if (!mounted) return;
-      AppSnackBar.showError(context, errMessage);
-    }
-  }
-
-  ///update profile
-  Future<void> updateProfileData() async {
-    try {
-      setState(() => isLoadingUpdate = true);
-      final user = await authRepo.updateProfileData(
-        name: _name.text.trim(),
-        email: _email.text.trim(),
-        address: _address.text.trim(),
-        image: selectedImage,
-        visa: _visa.text.trim(),
-      );
-      if (!mounted) return;
-      AppSnackBar.showSuccess(context, 'Profile updated successfully');
-      setState(() {
-        isLoadingUpdate = false;
-        userModel = user;
-      });
-
-      await getProfileData();
-    } catch (e) {
-      setState(() => isLoadingUpdate = false);
-      String errorMsg = 'Failed to update profile';
-      if (e is ApiError) errorMsg = e.message;
-      if (!mounted) return;
-      AppSnackBar.showError(context, errorMsg);
-    }
-  }
 
   Future<void> pickImage() async {
     final image = await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -98,262 +42,322 @@ class _ProfileViewState extends State<ProfileView> {
     }
   }
 
-  Future<void> logout() async {
-    try {
-      setState(() => isLoadingLogOut = true);
-      await authRepo.logout();
-      setState(() => isLoadingLogOut = false);
-      if (!mounted) return;
-      GoRouter.of(context).go(AppRoutePaths.loginView);
-    } catch (e) {
-      setState(() => isLoadingLogOut = false);
-      String errorMsg = 'Failed to logout';
-      if (e is ApiError) errorMsg = e.message;
-      if (!mounted) return;
-      AppSnackBar.showError(context, errorMsg);
-    }
-  }
+  late AuthCubit authCubit;
 
   @override
   void initState() {
-    autoLogin();
-    getProfileData().then((v) {
-      _name.text = userModel?.name ?? "";
-      _email.text = userModel?.email ?? "";
-      _address.text = userModel?.address ?? "";
-    });
-
+    authCubit = BlocProvider.of<AuthCubit>(context);
+    userModel = authCubit.currentUser;
+    authCubit.getProfileData();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool isGuest = authCubit.isGuest;
     if (!isGuest) {
       return RefreshIndicator(
         backgroundColor: Colors.white,
         color: AppColors.primary,
         onRefresh: () async {
-          await getProfileData();
+          await authCubit.getProfileData();
         },
-        child: GestureDetector(
-          onTap: () => FocusScope.of(context).unfocus(),
-          child: Scaffold(
-            backgroundColor: AppColors.primary,
-            appBar: AppBar(
+        child: BlocListener<AuthCubit, AuthState>(
+          listener: (context, state) {
+            if (state is AuthProfileData) {
+              setState(() {
+                userModel = state.user;
+                _name.text = state.user.name;
+                _email.text = state.user.email;
+                _address.text = state.user.address ?? '';
+                _visa.text = state.user.visa ?? '';
+              });
+            }
+          },
+          child: GestureDetector(
+            onTap: () => FocusScope.of(context).unfocus(),
+            child: Scaffold(
               backgroundColor: AppColors.primary,
-              scrolledUnderElevation: 0,
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: SvgPicture.asset('assets/icon/settings.svg'),
-                ),
-              ],
-              leading: GestureDetector(
-                onTap: () => context.pop(),
+              appBar: AppBar(
+                backgroundColor: AppColors.primary,
+                scrolledUnderElevation: 0,
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: SvgPicture.asset('assets/icon/settings.svg'),
+                  ),
+                ],
+                leading: GestureDetector(
+                  onTap: () => context.pop(),
 
-                child: Icon(Icons.arrow_back, color: Colors.white),
+                  child: Icon(Icons.arrow_back, color: Colors.white),
+                ),
               ),
-            ),
-            body: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: SingleChildScrollView(
-                child: Skeletonizer(
-                  enabled: userModel == null,
-                  child: Column(
-                    children: [
-                      Center(
-                        child: Container(
-                          height: 120,
+              body: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: SingleChildScrollView(
+                  child: Skeletonizer(
+                    enabled: userModel == null,
+                    child: Column(
+                      children: [
+                        Center(
+                          child: Container(
+                            height: 120,
+                            width: 120,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.grey.shade300,
+
+                              border: Border.all(width: 2, color: Colors.white),
+                            ),
+                            child: selectedImage != null
+                                ? ClipOval(
+                                    child: Image.file(
+                                      File(selectedImage!),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : (userModel?.image != null &&
+                                      userModel!.image!.isNotEmpty)
+                                ? ClipOval(
+                                    child: Image.network(
+                                      userModel!.image!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, err, builder) =>
+                                          Icon(Icons.person),
+                                    ),
+                                  )
+                                : Icon(Icons.person),
+                          ),
+                        ),
+
+                        Gap(10),
+                        Row(
+                          mainAxisAlignment: .center,
+                          children: [
+                            CustomButton(
+                              onTap: pickImage,
+                              text: userModel?.image == null
+                                  ? 'Upload image'
+                                  : 'change image',
+                              width: 160,
+                              height: 40,
+                              borderRadius: 12,
+                              color: Colors.white,
+                              textColor: AppColors.primary,
+                              horizontalPadding: 0,
+                              verticalPadding: 0,
+                              withIcon: true,
+                              iconColor: AppColors.primary,
+                              iconData: CupertinoIcons.camera,
+                            ),
+                            Gap(6),
+                            userModel?.image != null
+                                ? CustomButton(
+                                    onTap: () {},
+                                    text: 'remove image',
+                                    width: 160,
+                                    height: 40,
+                                    borderRadius: 12,
+                                    color: Colors.white,
+                                    textColor: AppColors.primary,
+                                    horizontalPadding: 4,
+                                    verticalPadding: 0,
+                                    withIcon: true,
+                                    iconColor: AppColors.primary,
+                                    iconData: CupertinoIcons.delete,
+                                  )
+                                : Gap(6),
+                          ],
+                        ),
+                        Gap(30),
+                        ProfileTextField(controller: _name, labelText: 'Name'),
+                        Gap(25),
+                        ProfileTextField(
+                          controller: _email,
+                          labelText: 'Email',
+                        ),
+                        Gap(25),
+                        ProfileTextField(
+                          controller: _address,
+                          labelText: 'Address',
+                        ),
+                        Gap(20),
+                        Divider(),
+                        Gap(10),
+                        userModel?.visa == null
+                            ? ProfileTextField(
+                                controller: _visa,
+                                labelText: 'Add Visa Card',
+                                keyboardType: TextInputType.number,
+                              )
+                            : PaymentTile(
+                                titleColor: const Color(0xFF3C2F2F),
+                                subTitleColor: AppColors.greyColor,
+                                onTap: () {},
+                                title: 'Debit card',
+                                subTitle:
+                                    userModel?.visa ?? '**** **** **** 0505',
+                                icon: 'assets/icon/visa.png',
+                                tileColor: const Color(0xFFF3F4F6),
+                                value: 'Visa',
+                                groupValue: 'Visa',
+                                onChanged: (v) {},
+                                trailing: Text(
+                                  'Default',
+                                  style: Styles.boldTextStyle16,
+                                ),
+                              ),
+                        Gap(200),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              bottomSheet: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                height: 70,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    /// ------- EDIT PROFILE BUTTON -------
+                    GestureDetector(
+                      onTap: () async {
+                        await authCubit.updateProfileData(
+                          name: _name.text.trim(),
+                          email: _email.text.trim(),
+                          address: _address.text.trim(),
+                          image: selectedImage,
+                          visa: _visa.text.trim(),
+                        );
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: SizedBox(
                           width: 120,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.grey.shade300,
-
-                            border: Border.all(width: 2, color: Colors.white),
+                          height: 20,
+                          child: Center(
+                            child: BlocConsumer<AuthCubit, AuthState>(
+                              listener: (context, state) {
+                                if (state is AuthProfileUpdated) {
+                                  AppSnackBar.showSuccess(
+                                    context,
+                                    'Profile updated successfully',
+                                  );
+                                  setState(() {
+                                    userModel = state.user;
+                                  });
+                                } else if (state is AuthFailure) {
+                                  AppSnackBar.showError(context, state.message);
+                                }
+                              },
+                              builder: (context, state) {
+                                if (state is AuthUpdateLoading) {
+                                  return const CupertinoActivityIndicator(
+                                    color: Colors.white,
+                                  );
+                                } else {
+                                  return Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'Edit Profile',
+                                        style: Styles.textStyle18.copyWith(
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 5),
+                                      const Icon(
+                                        Icons.edit_outlined,
+                                        color: Colors.white,
+                                      ),
+                                    ],
+                                  );
+                                }
+                              },
+                            ),
                           ),
-                          child: selectedImage != null
-                              ? ClipOval(
-                                  child: Image.file(
-                                    File(selectedImage!),
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              : (userModel?.image != null &&
-                                    userModel!.image!.isNotEmpty)
-                              ? ClipOval(
-                                  child: Image.network(
-                                    userModel!.image!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, err, builder) =>
-                                        Icon(Icons.person),
-                                  ),
-                                )
-                              : Icon(Icons.person),
                         ),
                       ),
+                    ),
 
-                      Gap(10),
-                      Row(
-                        mainAxisAlignment: .center,
-                        children: [
-                          CustomButton(
-                            onTap: pickImage,
-                            text: userModel?.image == null
-                                ? 'Upload image'
-                                : 'change image',
-                            width: 160,
-                            height: 40,
-                            borderRadius: 12,
-                            color: Colors.white,
-                            textColor: AppColors.primary,
-                            horizontalPadding: 0,
-                            verticalPadding: 0,
-                            withIcon: true,
-                            iconColor: AppColors.primary,
-                            iconData: CupertinoIcons.camera,
-                          ),
-                          Gap(6),
-                          userModel?.image != null
-                              ? CustomButton(
-                                  onTap: () {},
-                                  text: 'remove image',
-                                  width: 160,
-                                  height: 40,
-                                  borderRadius: 12,
-                                  color: Colors.white,
-                                  textColor: AppColors.primary,
-                                  horizontalPadding: 4,
-                                  verticalPadding: 0,
-                                  withIcon: true,
-                            iconColor: AppColors.primary,
-                                  iconData: CupertinoIcons.delete,
-                                )
-                              : Gap(6),
-                        ],
-                      ),
-                      Gap(30),
-                      ProfileTextField(controller: _name, labelText: 'Name'),
-                      Gap(25),
-                      ProfileTextField(controller: _email, labelText: 'Email'),
-                      Gap(25),
-                      ProfileTextField(
-                        controller: _address,
-                        labelText: 'Address',
-                      ),
-                      Gap(20),
-                      Divider(),
-                      Gap(10),
-                      userModel?.visa == null
-                          ? ProfileTextField(
-                              controller: _visa,
-                              labelText: 'Add Visa Card',
-                              keyboardType: TextInputType.number,
-                            )
-                          : PaymentTile(
-                              titleColor: const Color(0xFF3C2F2F),
-                              subTitleColor: AppColors.greyColor,
-                              onTap: () {},
-                              title: 'Debit card',
-                              subTitle:
-                                  userModel?.visa ?? '**** **** **** 0505',
-                              icon: 'assets/icon/visa.png',
-                              tileColor: const Color(0xFFF3F4F6),
-                              value: 'Visa',
-                              groupValue: 'Visa',
-                              onChanged: (v) {},
-                              trailing: Text(
-                                'Default',
-                                style: Styles.boldTextStyle16,
-                              ),
+                    /// ------- LOGOUT BUTTON -------
+                    GestureDetector(
+                      onTap: () async {
+                        await authCubit.logout();
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: AppColors.primary),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: SizedBox(
+                          width: 120,
+                          height: 20,
+                          child: Center(
+                            child: BlocConsumer<AuthCubit, AuthState>(
+                              listener: (context, state) {
+                                if (state is AuthLogOut) {
+                                  GoRouter.of(
+                                    context,
+                                  ).go(AppRoutePaths.loginView);
+                                  AppSnackBar.showSuccess(
+                                    context,
+                                    'Logout Success',
+                                  );
+                                }
+                              },
+                              builder: (context, state) {
+                                if (state is AuthLoading) {
+                                  return const CupertinoActivityIndicator(
+                                    color: AppColors.primary,
+                                  );
+                                } else {
+                                  return Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'Log out',
+                                        style: Styles.textStyle18.copyWith(
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 5),
+                                      Icon(
+                                        Icons.logout_outlined,
+                                        color: AppColors.primary,
+                                      ),
+                                    ],
+                                  );
+                                }
+                              },
                             ),
-                      Gap(200),
-                    ],
-                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),bottomSheet: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            height: 70,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-
-                /// ------- EDIT PROFILE BUTTON -------
-                GestureDetector(
-                  onTap: isLoadingUpdate ? null : updateProfileData,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: SizedBox(
-                      width: 120,
-                      height: 20,
-                      child: Center(
-                        child: isLoadingUpdate
-                            ? const CupertinoActivityIndicator(color: Colors.white)
-                            : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Edit Profile',
-                              style: Styles.textStyle18.copyWith(
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 5),
-                            const Icon(Icons.edit_outlined, color: Colors.white),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-
-                /// ------- LOGOUT BUTTON -------
-                GestureDetector(
-                  onTap: isLoadingLogOut ? null : logout,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: AppColors.primary),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: SizedBox(
-                      width: 120,
-                      height: 20,
-                      child: Center(
-                        child: isLoadingLogOut
-                            ? CupertinoActivityIndicator(color: AppColors.primary)
-                            : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Log out',
-                              style: Styles.textStyle18.copyWith(
-                                color: AppColors.primary,
-                              ),
-                            ),
-                            const SizedBox(width: 5),
-                            Icon(Icons.logout_outlined, color: AppColors.primary),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          )
           ),
         ),
       );

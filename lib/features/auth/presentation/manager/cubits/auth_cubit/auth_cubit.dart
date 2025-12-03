@@ -65,10 +65,10 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> logout() async {
-    emit(AuthLoading());
+    emit(AuthLodOutLoading());
     try {
       await authRepo.logout();
-      emit(AuthGuest());
+      emit(AuthLogOut());
     } catch (e) {
       emit(AuthFailure(message: e.toString()));
     }
@@ -104,7 +104,7 @@ class AuthCubit extends Cubit<AuthState> {
     required String visa,
     String? image,
   }) async {
-    emit(AuthLoading());
+    emit(AuthUpdateLoading());
     try {
       final user = await authRepo.updateProfileData(
         name: name,
@@ -115,6 +115,7 @@ class AuthCubit extends Cubit<AuthState> {
       );
       if (user != null) {
         emit(AuthProfileUpdated(user: user));
+        authRepo.currentUser = user;
       } else {
         emit(AuthFailure(message: "Failed to update profile data"));
       }

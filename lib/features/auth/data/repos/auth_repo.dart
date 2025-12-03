@@ -26,4 +26,5 @@ abstract class AuthRepo {
   bool get isGuest;
 
   UserModel? get currentUser;
+  set currentUser(UserModel? user);
 }

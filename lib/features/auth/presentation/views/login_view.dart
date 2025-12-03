@@ -109,13 +109,12 @@ class _LoginViewState extends State<LoginView> {
                         const Gap(25),
                         BlocConsumer<AuthCubit, AuthState>(
                           listener: (context, state) {
-                            if (state is AuthAuthenticated ) {
+                            if (state is AuthAuthenticated) {
                               GoRouter.of(context).go(AppRoutePaths.root);
                               AppSnackBar.showSuccess(context, 'Login Success');
-                            } else if(state is AuthGuest){
+                            } else if (state is AuthGuest) {
                               GoRouter.of(context).go(AppRoutePaths.root);
-                            }
-                            else if (state is AuthFailure) {
+                            } else if (state is AuthFailure) {
                               AppSnackBar.showError(context, state.message);
                             }
                           },

@@ -69,7 +69,8 @@ class AuthRepoImpl implements AuthRepo {
     }
     return _token;
   }
-    @override
+
+  @override
   Future<void> continueAsGuest() async {
     await PrefHelpers.saveToken('guest');
     _token = 'guest';
@@ -84,7 +85,7 @@ class AuthRepoImpl implements AuthRepo {
     _currentUser = null;
     _token = null;
     await PrefHelpers.clearToken();
-    await continueAsGuest();
+
   }
 
   Future<void> _saveUserSession(UserModel? user) async {
@@ -92,6 +93,10 @@ class AuthRepoImpl implements AuthRepo {
       await PrefHelpers.saveToken(user!.token!);
       _token = user.token!;
     }
+    _currentUser = user;
+  }
+  @override
+  set currentUser(UserModel? user) {
     _currentUser = user;
   }
 }

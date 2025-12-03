@@ -1,17 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungry/core/routes/app_router.dart';
 import 'package:hungry/core/utils/custom_snack_bar.dart';
-import 'package:hungry/features/auth/data/repos/auth_repo_impl.dart';
+import 'package:hungry/features/auth/presentation/manager/cubits/auth_cubit/auth_cubit.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_styles.dart';
-import '../../../../core/network/api_error.dart';
 import '../../../../core/shared/custom_text_field.dart';
-import '../../data/repos/old_version_repo.dart';
 import '../widgets/custom_btn.dart';
 
 class SignupView extends StatefulWidget {
@@ -44,40 +43,7 @@ class _SignupViewState extends State<SignupView> {
     emailController.dispose();
     passwordController.dispose();
     nameController.dispose();
-    _formKey.currentState?.dispose();
     super.dispose();
-  }
-
-  AuthRepo authRepo = AuthRepo();
-  bool isLoading = false;
-
-  Future<void> signup() async {
-    try {
-      setState(() => isLoading = true);
-      final user = await authRepo.signup(
-        nameController.text.trim(),
-        emailController.text.trim(),
-        passwordController.text.trim(),
-      );
-      if (user != null) {
-        if (!mounted) return;
-        setState(() => isLoading = false);
-        AppSnackBar.showSuccess(
-          context,
-          "Registration successful. Welcome aboard!",
-        );
-        GoRouter.of(context).go(AppRoutePaths.root);
-      }
-    } catch (e) {
-      setState(() => isLoading = false);
-      String errMessage = 'Unhandled error';
-      if (e is ApiError) {
-        errMessage = e.message;
-      }
-      if (mounted) {
-        AppSnackBar.showError(context, errMessage);
-      }
-    }
   }
 
   @override
@@ -148,20 +114,44 @@ class _SignupViewState extends State<SignupView> {
                           ),
 
                           Gap(25),
-                          isLoading
-                              ? const CupertinoActivityIndicator(
-                            color: AppColors.primary,
-                          )
-                              :CustomAuthBtn(
-                            color: AppColors.primary,
-                            textColor: Colors.white,
-                            onTap: () {
-                              if (_formKey.currentState!.validate()) {
-                                signup();
+                          BlocConsumer<AuthCubit, AuthState>(
+                            listener: (context, state) {
+                              if (state is AuthAuthenticated) {
+                                GoRouter.of(context).go(AppRoutePaths.root);
+                                AppSnackBar.showSuccess(
+                                  context,
+                                  'Registration successful. Welcome aboard!',
+                                );
+                              } else if (state is AuthFailure) {
+                                AppSnackBar.showError(context, state.message);
                               }
                             },
-                            text: 'Sign up',
+                            builder: (context, state) {
+                              if (state is AuthLoading) {
+                                return const CupertinoActivityIndicator(
+                                  color: AppColors.primary,
+                                );
+                              } else {
+                                return CustomAuthBtn(
+                                  color: AppColors.primary,
+                                  textColor: Colors.white,
+                                  onTap: () {
+                                    if (_formKey.currentState!.validate()) {
+                                      BlocProvider.of<AuthCubit>(
+                                        context,
+                                      ).signup(
+                                        name: nameController.text,
+                                        email: emailController.text,
+                                        password: passwordController.text,
+                                      );
+                                    }
+                                  },
+                                  text: 'Sign up',
+                                );
+                              }
+                            },
                           ),
+
                           Gap(10),
                           CustomAuthBtn(
                             onTap: () {

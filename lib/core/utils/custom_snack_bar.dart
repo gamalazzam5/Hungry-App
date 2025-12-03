@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hungry/core/constants/app_colors.dart';
 
 class AppSnackBar {
   static void showError(BuildContext context, String message) {
@@ -14,7 +15,7 @@ class AppSnackBar {
     _show(
       context,
       message,
-      backgroundColor: Colors.green,
+      backgroundColor: AppColors.primary,
       icon: Icons.check_circle_outline,
     );
   }
