@@ -4,7 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungry/core/routes/app_router.dart';
 import 'package:hungry/features/home/data/models/product_model.dart';
-import 'package:hungry/features/home/data/repos/product_repo.dart';
+import 'package:hungry/features/home/data/repos/product_repo_old_version.dart';
 import 'package:hungry/features/home/widgets/card_item.dart';
 import 'package:hungry/features/home/widgets/categories.dart';
 import 'package:hungry/features/home/widgets/search_field.dart';

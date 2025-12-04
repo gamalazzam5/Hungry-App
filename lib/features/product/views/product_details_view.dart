@@ -9,7 +9,7 @@ import 'package:hungry/core/utils/custom_snack_bar.dart';
 import 'package:hungry/features/cart/data/models/cart_model.dart';
 import 'package:hungry/features/cart/data/repos/cart_repo.dart';
 import 'package:hungry/features/home/data/models/product_model.dart';
-import 'package:hungry/features/home/data/repos/product_repo.dart';
+import 'package:hungry/features/home/data/repos/product_repo_old_version.dart';
 import 'package:hungry/features/product/widgets/spicy_slider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
