@@ -5,18 +5,16 @@ import 'package:go_router/go_router.dart';
 import 'package:hungry/core/routes/app_router.dart';
 import 'package:hungry/features/home/data/models/product_model.dart';
 import 'package:hungry/features/home/data/repos/product_repo_old_version.dart';
-import 'package:hungry/features/home/widgets/card_item.dart';
-import 'package:hungry/features/home/widgets/categories.dart';
-import 'package:hungry/features/home/widgets/search_field.dart';
+import 'package:hungry/features/home/presentation/manager/cubits/product_cubit/product_cubit.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-import '../../../core/constants/app_colors.dart';
-import '../../../core/network/api_error.dart';
-import '../../../core/utils/custom_snack_bar.dart';
-import '../../auth/data/model/user_model.dart';
-import '../../auth/data/repos/auth_repo_impl.dart';
-import '../../auth/data/repos/old_version_repo.dart';
-import '../../auth/presentation/manager/cubits/auth_cubit/auth_cubit.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../auth/data/model/user_model.dart';
+import '../../../auth/data/repos/old_version_repo.dart';
+import '../../../auth/presentation/manager/cubits/auth_cubit/auth_cubit.dart';
+import '../widgets/card_item.dart';
+import '../widgets/categories.dart';
+import '../widgets/search_field.dart';
 import '../widgets/user_header.dart';
 
 class HomeView extends StatefulWidget {
@@ -36,20 +34,14 @@ class _HomeViewState extends State<HomeView> {
   AuthRepo authRepo = AuthRepo();
   UserModel? userModel;
   late AuthCubit authCubit;
+  late ProductCubit productCubit;
   late bool isGuest;
-  Future<void> getProducts() async {
-    final response = await productRepo.getProducts();
-    if (!mounted) return;
-    setState(() {
-      allProducts = response;
-      products = response;
-    });
-  }
 
   @override
   void initState() {
-    getProducts();
     authCubit = BlocProvider.of<AuthCubit>(context);
+    productCubit = BlocProvider.of<ProductCubit>(context);
+    productCubit.getProducts();
     isGuest = authCubit.isGuest;
     !isGuest? authCubit.getProfileData():null;
 
@@ -58,7 +50,7 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    final bool loading = products == null;
+    bool loading = products == null;
 
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
@@ -68,7 +60,7 @@ class _HomeViewState extends State<HomeView> {
           });
         }
       },
-      child:  RefreshIndicator(
+      child: RefreshIndicator(
         backgroundColor: Colors.white,
         color: AppColors.primary,
         onRefresh: () async {
@@ -132,49 +124,68 @@ class _HomeViewState extends State<HomeView> {
 
                 SliverPadding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverGrid(
-                    delegate: SliverChildBuilderDelegate(
-                      childCount: loading ? 6 : products!.length,
-                      (context, index) {
-                        final product = loading
-                            ? ProductModel(
-                                //fake image
-                                image:
-                                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxuutX8HduKl2eiBeqSWo1VdXcOS9UxzsKhQ&s',
-                                name: '',
-                                desc: '',
-                                rating: '',
-                                id: '',
-                                price: '',
-                              )
-                            : products![index];
+                  sliver: BlocListener<ProductCubit,ProductState>(
+                    listener: (context,state){
+                      if(state is ProductSuccess){
+                        setState(() {
+                          products = state.productModel;
+                          allProducts = state.productModel;
+                        });
+                      }else if(state is ProductLoading){
+                        setState(() {
+                          loading = true;
+                        });
+                      }else{
+                        setState(() {
+                          loading = false;
+                        });
+                      }
+                    },
+                    child: SliverGrid(
+                      delegate: SliverChildBuilderDelegate(
+                        childCount: loading ? 6 : products!.length,
+                        (context, index) {
+                          /// here we will make edit
+                          final product = loading
+                              ? ProductModel(
+                                  //fake image
+                                  image:
+                                      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxuutX8HduKl2eiBeqSWo1VdXcOS9UxzsKhQ&s',
+                                  name: '',
+                                  desc: '',
+                                  rating: '',
+                                  id: '',
+                                  price: '',
+                                )
+                              : products![index];
 
-                        return GestureDetector(
-                          onTap: loading
-                              ? null
-                              : () => GoRouter.of(context).push(
-                                  AppRoutePaths.productDetailsView,
-                                  extra: product,
-                                ),
+                          return GestureDetector(
+                            onTap: loading
+                                ? null
+                                : () => GoRouter.of(context).push(
+                                    AppRoutePaths.productDetailsView,
+                                    extra: product,
+                                  ),
 
-                          child: Skeletonizer(
-                            enabled: loading,
-                            child: CardItem(
-                              image: product.image,
-                              text: product.name,
-                              desc: product.desc,
-                              rate: product.rating,
-                              isSelected: false,
+                            child: Skeletonizer(
+                              enabled: loading,
+                              child: CardItem(
+                                image: product.image,
+                                text: product.name,
+                                desc: product.desc,
+                                rate: product.rating,
+                                isSelected: false,
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: .66,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
+                          );
+                        },
+                      ),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: .66,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                      ),
                     ),
                   ),
                 ),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_styles.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_styles.dart';
+
 
 class Categories extends StatefulWidget {
    Categories({super.key, required this.category, required this.selectedIndex});

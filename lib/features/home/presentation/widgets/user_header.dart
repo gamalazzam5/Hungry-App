@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gap/gap.dart';
 
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_styles.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_styles.dart';
+
 
 class UserHeader extends StatelessWidget {
   const UserHeader({super.key,  required this.name ,  this.profileImage});
