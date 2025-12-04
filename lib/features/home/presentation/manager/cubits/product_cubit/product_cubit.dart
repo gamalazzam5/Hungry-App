@@ -31,10 +31,22 @@ class ProductCubit extends Cubit<ProductState> {
   Future<void> getOptions() async {
     emit(OptionsLoading());
     try {
-      final options = await productRepo.getToppings();
+      final options = await productRepo.getOptions();
       emit(OptionsSuccess(optionsModel: options));
     } catch (e) {
       emit(OptionsFailure(errMessage: e.toString()));
     }
   }
+  void filterProducts(String query) {
+    if (state is! ProductSuccess) return;
+
+    final current = (state as ProductSuccess).productModel;
+
+    final filtered = current
+        .where((p) => p.name.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+
+    emit(ProductFiltered(filtered));
+  }
+
 }

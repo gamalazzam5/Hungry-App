@@ -45,3 +45,8 @@ final class ProductFailure extends ProductState {
 
   ProductFailure({required this.errMessage});
 }
+final class ProductFiltered extends ProductState{
+  final List<ProductModel> filteredProducts;
+
+  ProductFiltered(this.filteredProducts);
+}

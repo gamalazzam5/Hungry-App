@@ -4,13 +4,10 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungry/core/routes/app_router.dart';
 import 'package:hungry/features/home/data/models/product_model.dart';
-import 'package:hungry/features/home/data/repos/product_repo_old_version.dart';
 import 'package:hungry/features/home/presentation/manager/cubits/product_cubit/product_cubit.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../auth/data/model/user_model.dart';
-import '../../../auth/data/repos/old_version_repo.dart';
 import '../../../auth/presentation/manager/cubits/auth_cubit/auth_cubit.dart';
 import '../widgets/card_item.dart';
 import '../widgets/categories.dart';
@@ -25,173 +22,144 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  List category = ['All', 'Combos', 'Sliders', 'Classic'];
+  final List category = ['All', 'Combos', 'Sliders', 'Classic'];
   final TextEditingController searchController = TextEditingController();
-  List<ProductModel>? allProducts;
-  int selectedIndex = 0;
-  List<ProductModel>? products;
-  ProductRepo productRepo = ProductRepo();
-  AuthRepo authRepo = AuthRepo();
-  UserModel? userModel;
-  late AuthCubit authCubit;
-  late ProductCubit productCubit;
-  late bool isGuest;
 
   @override
   void initState() {
-    authCubit = BlocProvider.of<AuthCubit>(context);
-    productCubit = BlocProvider.of<ProductCubit>(context);
-    productCubit.getProducts();
-    isGuest = authCubit.isGuest;
-    !isGuest? authCubit.getProfileData():null;
-
     super.initState();
+
+    final authCubit = context.read<AuthCubit>();
+    final productCubit = context.read<ProductCubit>();
+
+    if (!authCubit.isGuest) authCubit.getProfileData();
+    productCubit.getProducts();
   }
 
   @override
   Widget build(BuildContext context) {
-    bool loading = products == null;
+    final authCubit = context.watch<AuthCubit>();
 
-    return BlocListener<AuthCubit, AuthState>(
-      listener: (context, state) {
-        if (state is AuthProfileData) {
-          setState(() {
-            userModel = state.user;
-          });
-        }
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: () async {
+        if (!authCubit.isGuest) await authCubit.getProfileData();
+        await context.read<ProductCubit>().getProducts();
       },
-      child: RefreshIndicator(
-        backgroundColor: Colors.white,
-        color: AppColors.primary,
-        onRefresh: () async {
-          !isGuest? await authCubit.getProfileData():null;
-        },
-        child: GestureDetector(
-          onTap: () => FocusScope.of(context).unfocus(),
-          child: Scaffold(
-            body: CustomScrollView(
-              slivers: [
-                SliverAppBar(
-                  pinned: true,
-                  floating: false,
-                  elevation: 0,
-                  backgroundColor: Colors.white,
-                  scrolledUnderElevation: 0,
-                  toolbarHeight: 165,
-                  automaticallyImplyLeading: false,
-                  flexibleSpace: Padding(
-                    padding: EdgeInsets.only(top: 50, right: 20, left: 20),
-                    child: Column(
-                      children: [
-                        Skeletonizer(
-                          enabled: userModel == null && !isGuest,
+      child: Scaffold(
+        body: CustomScrollView(
+          slivers: [
+            /// ---------------- HEADER ----------------
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: Colors.white,
+              toolbarHeight: 165,
+              automaticallyImplyLeading: false,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              flexibleSpace: Padding(
+                padding: const EdgeInsets.only(top: 50, right: 20, left: 20),
+                child: Column(
+                  children: [
+                    BlocBuilder<AuthCubit, AuthState>(
+                      builder: (context, state) {
+                        final isGuest = authCubit.isGuest;
+                        final user = authCubit.currentUser;
+
+                        return Skeletonizer(
+                          enabled: !isGuest && user == null,
                           child: UserHeader(
-                            name: userModel?.name ?? 'Guest',
-                            profileImage: userModel?.image,
+                            name: user?.name ?? 'Guest',
+                            profileImage: user?.image,
                           ),
-                        ),
-                        Gap(20),
-                        SearchField(
-                          controller: searchController,
-                          onChanged: (value) {
-                            final query = value.toLowerCase();
-                            setState(() {
-                              products = allProducts
-                                  ?.where(
-                                    (p) => p.name.toLowerCase().contains(query),
-                                  )
-                                  .toList();
-                            });
-                          },
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                  ),
+
+                    const Gap(20),
+
+                    SearchField(
+                      controller: searchController,
+                      onChanged: (value) {
+                        context.read<ProductCubit>().filterProducts(value);
+                      },
+                    ),
+                  ],
                 ),
-
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 16,
-                    ),
-                    child: Categories(
-                      category: category,
-                      selectedIndex: selectedIndex,
-                    ),
-                  ),
-                ),
-
-                SliverPadding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  sliver: BlocListener<ProductCubit,ProductState>(
-                    listener: (context,state){
-                      if(state is ProductSuccess){
-                        setState(() {
-                          products = state.productModel;
-                          allProducts = state.productModel;
-                        });
-                      }else if(state is ProductLoading){
-                        setState(() {
-                          loading = true;
-                        });
-                      }else{
-                        setState(() {
-                          loading = false;
-                        });
-                      }
-                    },
-                    child: SliverGrid(
-                      delegate: SliverChildBuilderDelegate(
-                        childCount: loading ? 6 : products!.length,
-                        (context, index) {
-                          /// here we will make edit
-                          final product = loading
-                              ? ProductModel(
-                                  //fake image
-                                  image:
-                                      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxuutX8HduKl2eiBeqSWo1VdXcOS9UxzsKhQ&s',
-                                  name: '',
-                                  desc: '',
-                                  rating: '',
-                                  id: '',
-                                  price: '',
-                                )
-                              : products![index];
-
-                          return GestureDetector(
-                            onTap: loading
-                                ? null
-                                : () => GoRouter.of(context).push(
-                                    AppRoutePaths.productDetailsView,
-                                    extra: product,
-                                  ),
-
-                            child: Skeletonizer(
-                              enabled: loading,
-                              child: CardItem(
-                                image: product.image,
-                                text: product.name,
-                                desc: product.desc,
-                                rate: product.rating,
-                                isSelected: false,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: .66,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+
+            /// ---------------- CATEGORIES ----------------
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 16),
+                child: Categories(
+                  category: category,
+                  selectedIndex: 0,
+                ),
+              ),
+            ),
+
+            /// ---------------- PRODUCTS GRID ----------------
+            BlocBuilder<ProductCubit, ProductState>(
+              builder: (context, state) {
+                bool loading = state is ProductLoading;
+                List<ProductModel> products = [];
+
+                if (state is ProductSuccess) {
+                  products = state.productModel;
+                }
+
+                return SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverGrid(
+                    delegate: SliverChildBuilderDelegate(
+                      childCount: loading ? 6 : products.length,
+                          (context, index) {
+                        final product = loading
+                            ? ProductModel(
+                          image:
+                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxuutX8HduKl2eiBeqSWo1VdXcOS9UxzsKhQ&s',
+                          name: '',
+                          desc: '',
+                          rating: '',
+                          id: '',
+                          price: '',
+                        )
+                            : products[index];
+
+                        return GestureDetector(
+                          onTap: loading
+                              ? null
+                              : () => GoRouter.of(context).push(
+                            AppRoutePaths.productDetailsView,
+                            extra: product,
+                          ),
+                          child: Skeletonizer(
+                            enabled: loading,
+                            child: CardItem(
+                              image: product.image,
+                              text: product.name,
+                              desc: product.desc,
+                              rate: product.rating,
+                              isSelected: false,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: .66,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

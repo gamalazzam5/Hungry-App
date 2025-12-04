@@ -221,7 +221,7 @@ class _ProfileViewState extends State<ProfileView> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: .spaceBetween,
                   children: [
                     /// ------- EDIT PROFILE BUTTON -------
                     GestureDetector(
@@ -269,7 +269,7 @@ class _ProfileViewState extends State<ProfileView> {
                                   );
                                 } else {
                                   return Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisAlignment: .center,
                                     children: [
                                       Text(
                                         'Edit Profile',
