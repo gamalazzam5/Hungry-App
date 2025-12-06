@@ -43,7 +43,7 @@ class _CardItemState extends State<CardItem> {
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: .start,
             children: [
 
               Expanded(
@@ -53,6 +53,9 @@ class _CardItemState extends State<CardItem> {
                     widget.image,
                     width: double.infinity,
                     fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.broken_image, size: 50);
+                    },
                   ),
                 ),
               ),
@@ -62,7 +65,7 @@ class _CardItemState extends State<CardItem> {
               Expanded(
                 flex: 4,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: .start,
                   children: [
                     Text(
                       widget.text,

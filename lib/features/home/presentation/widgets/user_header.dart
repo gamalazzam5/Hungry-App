@@ -46,6 +46,7 @@ final String? profileImage;
               width: 68,
               height: 68,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Icon(Icons.person),
             ),
           ),
         ),

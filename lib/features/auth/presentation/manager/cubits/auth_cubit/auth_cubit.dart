@@ -8,6 +8,9 @@ class AuthCubit extends Cubit<AuthState> {
   AuthCubit(this.authRepo) : super(AuthInitial());
   AuthRepo authRepo;
 
+  set currentUser(UserModel? user) => authRepo.currentUser = user;
+
+  @override
   UserModel? get currentUser => authRepo.currentUser;
 
   bool get isGuest => authRepo.isGuest;

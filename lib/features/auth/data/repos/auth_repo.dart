@@ -27,4 +27,5 @@ abstract class AuthRepo {
 
   UserModel? get currentUser;
   set currentUser(UserModel? user);
+
 }

@@ -82,6 +82,7 @@ class _HomeViewState extends State<HomeView> {
                       controller: searchController,
                       onChanged: (value) {
                         context.read<ProductCubit>().filterProducts(value);
+
                       },
                     ),
                   ],
@@ -93,11 +94,10 @@ class _HomeViewState extends State<HomeView> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0, vertical: 16),
-                child: Categories(
-                  category: category,
-                  selectedIndex: 0,
+                  horizontal: 16.0,
+                  vertical: 16,
                 ),
+                child: Categories(category: category, selectedIndex: 0),
               ),
             ),
 
@@ -109,6 +109,8 @@ class _HomeViewState extends State<HomeView> {
 
                 if (state is ProductSuccess) {
                   products = state.productModel;
+                }else if (state is ProductFiltered) {
+                  products = state.filteredProducts;
                 }
 
                 return SliverPadding(
@@ -116,26 +118,25 @@ class _HomeViewState extends State<HomeView> {
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate(
                       childCount: loading ? 6 : products.length,
-                          (context, index) {
+                      (context, index) {
                         final product = loading
                             ? ProductModel(
-                          image:
-                          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxuutX8HduKl2eiBeqSWo1VdXcOS9UxzsKhQ&s',
-                          name: '',
-                          desc: '',
-                          rating: '',
-                          id: '',
-                          price: '',
-                        )
+                                image: 'https://via.placeholder.com/150',
+                                name: '',
+                                desc: '',
+                                rating: '',
+                                id: '',
+                                price: '',
+                              )
                             : products[index];
 
                         return GestureDetector(
                           onTap: loading
                               ? null
                               : () => GoRouter.of(context).push(
-                            AppRoutePaths.productDetailsView,
-                            extra: product,
-                          ),
+                                  AppRoutePaths.productDetailsView,
+                                  extra: product,
+                                ),
                           child: Skeletonizer(
                             enabled: loading,
                             child: CardItem(
@@ -149,12 +150,13 @@ class _HomeViewState extends State<HomeView> {
                         );
                       },
                     ),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: .66,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: .66,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                        ),
                   ),
                 );
               },

@@ -29,51 +29,110 @@ class _ProfileViewState extends State<ProfileView> {
   final TextEditingController _email = TextEditingController();
   final TextEditingController _address = TextEditingController();
   final TextEditingController _visa = TextEditingController();
-  UserModel? userModel;
-  String? selectedImage;
+
+  final ValueNotifier<String?> _selectedImage = ValueNotifier<String?>(null);
+
+  late AuthCubit authCubit;
 
   Future<void> pickImage() async {
     final image = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (image != null) {
-      setState(() {
-        selectedImage = image.path;
-      });
+      _selectedImage.value = image.path;
     }
   }
 
-  late AuthCubit authCubit;
-
   @override
   void initState() {
-    authCubit = BlocProvider.of<AuthCubit>(context);
-    userModel = authCubit.currentUser;
-    authCubit.getProfileData();
     super.initState();
+    authCubit = BlocProvider.of<AuthCubit>(context);
+
+    final user = authCubit.currentUser;
+    if (user != null) {
+      _name.text = user.name;
+      _email.text = user.email;
+      _address.text = user.address ?? '';
+      _visa.text = user.visa ?? '';
+    }
+
+    authCubit.getProfileData();
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _email.dispose();
+    _address.dispose();
+    _visa.dispose();
+    _selectedImage.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final bool isGuest = authCubit.isGuest;
-    if (!isGuest) {
-      return RefreshIndicator(
-        backgroundColor: Colors.white,
-        color: AppColors.primary,
-        onRefresh: () async {
-          await authCubit.getProfileData();
+
+    if (isGuest) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Center(child: Text('Guest Mode')),
+          const Gap(10),
+          CustomButton(
+            onTap: () {
+              GoRouter.of(context).go(AppRoutePaths.loginView);
+            },
+            text: 'Back to Login',
+            width: 150,
+            height: 40,
+            borderRadius: 12,
+            color: AppColors.primary,
+            textColor: Colors.white,
+            horizontalPadding: 6,
+            verticalPadding: 0,
+          ),
+        ],
+      );
+    }
+
+    return RefreshIndicator(
+      backgroundColor: Colors.white,
+      color: AppColors.primary,
+      onRefresh: () async {
+        await authCubit.getProfileData();
+      },
+      child: BlocConsumer<AuthCubit, AuthState>(
+        listener: (context, state) {
+          if (state is AuthProfileUpdated) {
+            AppSnackBar.showSuccess(
+              context,
+              'Profile updated successfully',
+            );
+          }
+
+          if (state is AuthFailure) {
+            AppSnackBar.showError(context, state.message);
+          }
+
+          if (state is AuthLogOut) {
+            GoRouter.of(context).go(AppRoutePaths.loginView);
+            AppSnackBar.showSuccess(context, 'Logout Success');
+          }
         },
-        child: BlocListener<AuthCubit, AuthState>(
-          listener: (context, state) {
-            if (state is AuthProfileData) {
-              setState(() {
-                userModel = state.user;
-                _name.text = state.user.name;
-                _email.text = state.user.email;
-                _address.text = state.user.address ?? '';
-                _visa.text = state.user.visa ?? '';
-              });
-            }
-          },
-          child: GestureDetector(
+        builder: (context, state) {
+          final user = authCubit.currentUser;
+
+          if (state is AuthProfileData || state is AuthProfileUpdated) {
+            final UserModel u = (state as dynamic).user;
+            _name.text = u.name;
+            _email.text = u.email;
+            _address.text = u.address ?? '';
+            _visa.text = u.visa ?? '';
+          }
+
+          final bool isLoading =
+              (user == null) && (state is AuthLoading || state is AuthInitial);
+
+          return GestureDetector(
             onTap: () => FocusScope.of(context).unfocus(),
             child: Scaffold(
               backgroundColor: AppColors.primary,
@@ -88,55 +147,68 @@ class _ProfileViewState extends State<ProfileView> {
                 ],
                 leading: GestureDetector(
                   onTap: () => context.pop(),
-
-                  child: Icon(Icons.arrow_back, color: Colors.white),
+                  child: const Icon(Icons.arrow_back, color: Colors.white),
                 ),
               ),
               body: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: SingleChildScrollView(
                   child: Skeletonizer(
-                    enabled: userModel == null,
+                    enabled: isLoading,
                     child: Column(
                       children: [
                         Center(
-                          child: Container(
-                            height: 120,
-                            width: 120,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.grey.shade300,
+                          child: ValueListenableBuilder<String?>(
+                            valueListenable: _selectedImage,
+                            builder: (context, selectedImage, _) {
+                              Widget child;
+                              if (selectedImage != null) {
+                                child = ClipOval(
+                                  child: Image.file(
+                                    File(selectedImage),
+                                    fit: BoxFit.cover,
+                                  ),
+                                );
+                              } else if (user?.image != null &&
+                                  user!.image!.isNotEmpty) {
+                                child = ClipOval(
+                                  child: Image.network(
+                                    user!.image!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, err, builder) =>
+                                    const Icon(Icons.person),
+                                  ),
+                                );
+                              } else {
+                                child = const Icon(Icons.person);
+                              }
 
-                              border: Border.all(width: 2, color: Colors.white),
-                            ),
-                            child: selectedImage != null
-                                ? ClipOval(
-                                    child: Image.file(
-                                      File(selectedImage!),
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                : (userModel?.image != null &&
-                                      userModel!.image!.isNotEmpty)
-                                ? ClipOval(
-                                    child: Image.network(
-                                      userModel!.image!,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, err, builder) =>
-                                          Icon(Icons.person),
-                                    ),
-                                  )
-                                : Icon(Icons.person),
+                              return Container(
+                                height: 120,
+                                width: 120,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.grey.shade300,
+                                  border: Border.all(
+                                    width: 2,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                child: child,
+                              );
+                            },
                           ),
                         ),
 
-                        Gap(10),
+                        const Gap(10),
+
                         Row(
-                          mainAxisAlignment: .center,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             CustomButton(
                               onTap: pickImage,
-                              text: userModel?.image == null
+                              text: user?.image == null
                                   ? 'Upload image'
                                   : 'change image',
                               width: 160,
@@ -150,64 +222,72 @@ class _ProfileViewState extends State<ProfileView> {
                               iconColor: AppColors.primary,
                               iconData: CupertinoIcons.camera,
                             ),
-                            Gap(6),
-                            userModel?.image != null
+                            const Gap(6),
+                            user?.image != null
                                 ? CustomButton(
-                                    onTap: () {},
-                                    text: 'remove image',
-                                    width: 160,
-                                    height: 40,
-                                    borderRadius: 12,
-                                    color: Colors.white,
-                                    textColor: AppColors.primary,
-                                    horizontalPadding: 4,
-                                    verticalPadding: 0,
-                                    withIcon: true,
-                                    iconColor: AppColors.primary,
-                                    iconData: CupertinoIcons.delete,
-                                  )
-                                : Gap(6),
+                              onTap: () {
+                                _selectedImage.value = null;
+
+                              },
+                              text: 'remove image',
+                              width: 160,
+                              height: 40,
+                              borderRadius: 12,
+                              color: Colors.white,
+                              textColor: AppColors.primary,
+                              horizontalPadding: 4,
+                              verticalPadding: 0,
+                              withIcon: true,
+                              iconColor: AppColors.primary,
+                              iconData: CupertinoIcons.delete,
+                            )
+                                : const Gap(6),
                           ],
                         ),
-                        Gap(30),
+
+                        const Gap(30),
+
                         ProfileTextField(controller: _name, labelText: 'Name'),
-                        Gap(25),
+                        const Gap(25),
                         ProfileTextField(
                           controller: _email,
                           labelText: 'Email',
                         ),
-                        Gap(25),
+                        const Gap(25),
                         ProfileTextField(
                           controller: _address,
                           labelText: 'Address',
                         ),
-                        Gap(20),
-                        Divider(),
-                        Gap(10),
-                        userModel?.visa == null
+
+                        const Gap(20),
+                        const Divider(),
+                        const Gap(10),
+
+                        user?.visa == null
                             ? ProfileTextField(
-                                controller: _visa,
-                                labelText: 'Add Visa Card',
-                                keyboardType: TextInputType.number,
-                              )
+                          controller: _visa,
+                          labelText: 'Add Visa Card',
+                          keyboardType: TextInputType.number,
+                        )
                             : PaymentTile(
-                                titleColor: const Color(0xFF3C2F2F),
-                                subTitleColor: AppColors.greyColor,
-                                onTap: () {},
-                                title: 'Debit card',
-                                subTitle:
-                                    userModel?.visa ?? '**** **** **** 0505',
-                                icon: 'assets/icon/visa.png',
-                                tileColor: const Color(0xFFF3F4F6),
-                                value: 'Visa',
-                                groupValue: 'Visa',
-                                onChanged: (v) {},
-                                trailing: Text(
-                                  'Default',
-                                  style: Styles.boldTextStyle16,
-                                ),
-                              ),
-                        Gap(200),
+                          titleColor: const Color(0xFF3C2F2F),
+                          subTitleColor: AppColors.greyColor,
+                          onTap: () {},
+                          title: 'Debit card',
+                          subTitle:
+                          user?.visa ?? '**** **** **** 0505',
+                          icon: 'assets/icon/visa.png',
+                          tileColor: const Color(0xFFF3F4F6),
+                          value: 'Visa',
+                          groupValue: 'Visa',
+                          onChanged: (v) {},
+                          trailing: Text(
+                            'Default',
+                            style: Styles.boldTextStyle16,
+                          ),
+                        ),
+
+                        const Gap(200),
                       ],
                     ),
                   ),
@@ -221,16 +301,16 @@ class _ProfileViewState extends State<ProfileView> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
-                  mainAxisAlignment: .spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    /// ------- EDIT PROFILE BUTTON -------
+                    // ------- EDIT PROFILE BUTTON -------
                     GestureDetector(
                       onTap: () async {
                         await authCubit.updateProfileData(
                           name: _name.text.trim(),
                           email: _email.text.trim(),
                           address: _address.text.trim(),
-                          image: selectedImage,
+                          image: _selectedImage.value,
                           visa: _visa.text.trim(),
                         );
                       },
@@ -248,51 +328,32 @@ class _ProfileViewState extends State<ProfileView> {
                           width: 120,
                           height: 20,
                           child: Center(
-                            child: BlocConsumer<AuthCubit, AuthState>(
-                              listener: (context, state) {
-                                if (state is AuthProfileUpdated) {
-                                  AppSnackBar.showSuccess(
-                                    context,
-                                    'Profile updated successfully',
-                                  );
-                                  setState(() {
-                                    userModel = state.user;
-                                  });
-                                } else if (state is AuthFailure) {
-                                  AppSnackBar.showError(context, state.message);
-                                }
-                              },
-                              builder: (context, state) {
-                                if (state is AuthUpdateLoading) {
-                                  return const CupertinoActivityIndicator(
+                            child: (state is AuthUpdateLoading)
+                                ? const CupertinoActivityIndicator(
+                              color: Colors.white,
+                            )
+                                : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Edit Profile',
+                                  style: Styles.textStyle18.copyWith(
                                     color: Colors.white,
-                                  );
-                                } else {
-                                  return Row(
-                                    mainAxisAlignment: .center,
-                                    children: [
-                                      Text(
-                                        'Edit Profile',
-                                        style: Styles.textStyle18.copyWith(
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 5),
-                                      const Icon(
-                                        Icons.edit_outlined,
-                                        color: Colors.white,
-                                      ),
-                                    ],
-                                  );
-                                }
-                              },
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                const Icon(
+                                  Icons.edit_outlined,
+                                  color: Colors.white,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
                     ),
 
-                    /// ------- LOGOUT BUTTON -------
+                    // ------- LOGOUT BUTTON -------
                     GestureDetector(
                       onTap: () async {
                         await authCubit.logout();
@@ -312,42 +373,25 @@ class _ProfileViewState extends State<ProfileView> {
                           width: 120,
                           height: 20,
                           child: Center(
-                            child: BlocConsumer<AuthCubit, AuthState>(
-                              listener: (context, state) {
-                                if (state is AuthLogOut) {
-                                  GoRouter.of(
-                                    context,
-                                  ).go(AppRoutePaths.loginView);
-                                  AppSnackBar.showSuccess(
-                                    context,
-                                    'Logout Success',
-                                  );
-                                }
-                              },
-                              builder: (context, state) {
-                                if (state is AuthLogOutLoading) {
-                                  return const CupertinoActivityIndicator(
+                            child: (state is AuthLogOutLoading)
+                                ? const CupertinoActivityIndicator(
+                              color: AppColors.primary,
+                            )
+                                : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Log out',
+                                  style: Styles.textStyle18.copyWith(
                                     color: AppColors.primary,
-                                  );
-                                } else {
-                                  return Row(
-                                    mainAxisAlignment: .center,
-                                    children: [
-                                      Text(
-                                        'Log out',
-                                        style: Styles.textStyle18.copyWith(
-                                          color: AppColors.primary,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 5),
-                                      Icon(
-                                        Icons.logout_outlined,
-                                        color: AppColors.primary,
-                                      ),
-                                    ],
-                                  );
-                                }
-                              },
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                Icon(
+                                  Icons.logout_outlined,
+                                  color: AppColors.primary,
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -357,32 +401,9 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
               ),
             ),
-          ),
-        ),
-      );
-    } else if (isGuest) {
-      return Column(
-        mainAxisAlignment: .center,
-        children: [
-          Center(child: Text('Guest Mode')),
-          Gap(10),
-          CustomButton(
-            onTap: () {
-              GoRouter.of(context).go(AppRoutePaths.loginView);
-            },
-            text: 'Back to Login',
-            width: 150,
-            height: 40,
-            borderRadius: 12,
-            color: AppColors.primary,
-            textColor: Colors.white,
-            horizontalPadding: 6,
-            verticalPadding: 0,
-          ),
-        ],
-      );
-    } else {
-      return SizedBox();
-    }
+          );
+        },
+      ),
+    );
   }
 }
