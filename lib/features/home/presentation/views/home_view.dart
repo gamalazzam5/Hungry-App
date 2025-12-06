@@ -82,7 +82,6 @@ class _HomeViewState extends State<HomeView> {
                       controller: searchController,
                       onChanged: (value) {
                         context.read<ProductCubit>().filterProducts(value);
-
                       },
                     ),
                   ],
@@ -109,7 +108,7 @@ class _HomeViewState extends State<HomeView> {
 
                 if (state is ProductSuccess) {
                   products = state.productModel;
-                }else if (state is ProductFiltered) {
+                } else if (state is ProductFiltered) {
                   products = state.filteredProducts;
                 }
 

@@ -1,3 +1,4 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungry/features/checkout/views/checkout_view.dart';
 import 'package:hungry/features/home/data/models/product_model.dart';
 import 'package:hungry/features/product/views/product_details_view.dart';
@@ -7,6 +8,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/views/login_view.dart';
 import '../../features/auth/presentation/views/signup_view.dart';
+import '../../features/home/data/repos/product_repo.dart';
+import '../../features/home/presentation/manager/cubits/options_cubit/options_cubit.dart';
+import '../../features/home/presentation/manager/cubits/toppings_cubit/toppings_cubit.dart';
+import '../utils/service_locator.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -29,7 +34,17 @@ class AppRouter {
         path: AppRoutePaths.productDetailsView,
         builder: (context, state) {
           final product = state.extra as ProductModel;
-          return ProductDetailsView(productModel: product);
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (_) => ToppingsCubit(getIt<ProductRepo>())..getToppings(),
+              ),
+              BlocProvider(
+                create: (_) => OptionsCubit(getIt<ProductRepo>())..getOptions(),
+              ),
+            ],
+            child: ProductDetailsView(productModel: product),
+          );
         },
       ),
       GoRoute(

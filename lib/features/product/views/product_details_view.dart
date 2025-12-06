@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hungry/core/constants/app_colors.dart';
@@ -9,11 +10,12 @@ import 'package:hungry/core/utils/custom_snack_bar.dart';
 import 'package:hungry/features/cart/data/models/cart_model.dart';
 import 'package:hungry/features/cart/data/repos/cart_repo.dart';
 import 'package:hungry/features/home/data/models/product_model.dart';
-import 'package:hungry/features/home/data/repos/product_repo_old_version.dart';
+import 'package:hungry/features/home/presentation/manager/cubits/options_cubit/options_cubit.dart';
+import 'package:hungry/features/home/presentation/manager/cubits/options_cubit/options_states.dart';
 import 'package:hungry/features/product/widgets/spicy_slider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-
-import '../../home/data/models/toppings_model.dart';
+import '../../home/presentation/manager/cubits/toppings_cubit/toppings_cubit.dart';
+import '../../home/presentation/manager/cubits/toppings_cubit/toppings_states.dart';
 import '../widgets/topping_card.dart';
 
 class ProductDetailsView extends StatefulWidget {
@@ -30,38 +32,17 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
   List<int> selectedTopping = [];
   List<int> selectedOptions = [];
 
-  final ProductRepo productRepo = ProductRepo();
-  List<ToppingsModel>? toppings;
-  List<ToppingsModel>? options;
   bool cartLoading = false;
 
-  Future<void> getToppings() async {
-    final response = await productRepo.getToppings();
-    if (!mounted) return;
-    setState(() => toppings = response);
-  }
-
-  Future<void> getOptions() async {
-    final response = await productRepo.getOptions();
-    if (!mounted) return;
-    setState(() => options = response);
-  }
-
-  ///cart
   CartRepo cartRepo = CartRepo();
 
   @override
   void initState() {
-   Future.wait([ getToppings(),
-   getOptions()]);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool loadingToppings = toppings == null;
-    final bool loadingOptions = options == null;
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -70,123 +51,130 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
           child: const Icon(Icons.arrow_back),
         ),
       ),
+
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
         child: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: .start,
             children: [
+              /// SLIDER
               SpicySlider(
                 image: widget.productModel.image,
                 value: value,
                 onChanged: (v) => setState(() => value = v),
               ),
-              const Gap(30),
 
+              const Gap(30),
               Text('Toppings', style: Styles.boldTextStyle20),
               const Gap(20),
 
-              Skeletonizer(
-                enabled: loadingToppings,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: List.generate(
-                      loadingToppings ? 4 : toppings!.length,
-                      (index) {
-                        final topping = loadingToppings
-                            ? ToppingsModel(
-                                id: 0,
-                                name: 'Loading...',
-                                image:
-                                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxuutX8HduKl2eiBeqSWo1VdXcOS9UxzsKhQ&s',
-                              )
-                            : toppings![index];
+              BlocBuilder<ToppingsCubit, ToppingsState>(
+                builder: (context, state) {
+                  if (state is ToppingsLoading) {
+                    return Skeletonizer(
+                      enabled: true,
+                      child: _loadingRow(),
+                    );
+                  }
 
-                        final isSelected = selectedTopping.contains(topping.id);
+                  if (state is ToppingsSuccess) {
+                    return SingleChildScrollView(
+                      scrollDirection: .horizontal,
+                      child: Row(
+                        children: List.generate(
+                          state.toppingsModel.length,
+                              (index) {
+                            final topping = state.toppingsModel[index];
+                            final isSelected =
+                            selectedTopping.contains(topping.id);
 
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: ToppingCard(
-                            imageUrl: topping.image,
-                            title: topping.name,
-                            onAdd: loadingToppings
-                                ? () {}
-                                : () {
-                                    final id = topping.id;
-                                    if (selectedTopping.contains(id)) {
-                                      setState(() {
-                                        selectedTopping.remove(id);
-                                      });
-                                    } else {
-                                      setState(() {
-                                        selectedTopping.add(id);
-                                      });
-                                    }
-                                  },
-                            color: isSelected
-                                ? Colors.green.withOpacity(0.2)
-                                : AppColors.primary.withOpacity(0.1),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: ToppingCard(
+                                imageUrl: topping.image,
+                                title: topping.name,
+                                onAdd: () {
+                                  final id = topping.id;
+                                  setState(() {
+                                    isSelected
+                                        ? selectedTopping.remove(id)
+                                        : selectedTopping.add(id);
+                                  });
+                                },
+                                color: isSelected
+                                    ? Colors.green.withOpacity(0.2)
+                                    : AppColors.primary.withOpacity(0.1),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (state is ToppingsFailure) {
+                    return Text(state.errMessage);
+                  }
+
+                  return const SizedBox();
+                },
               ),
 
               const Gap(50),
-
               Text('Side options', style: Styles.boldTextStyle20),
               const Gap(8),
 
-              Skeletonizer(
-                enabled: loadingOptions,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: List.generate(
-                      loadingOptions ? 4 : options!.length,
-                      (index) {
-                        final option = loadingOptions
-                            ? ToppingsModel(
-                                id: 0,
-                                name: 'Loading...',
-                                image:
-                                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxuutX8HduKl2eiBeqSWo1VdXcOS9UxzsKhQ&s',
-                              )
-                            : options![index];
+              BlocBuilder<OptionsCubit, OptionsState>(
+                builder: (context, state) {
+                  if (state is OptionsLoading) {
+                    return Skeletonizer(
+                      enabled: true,
+                      child: _loadingRow(),
+                    );
+                  }
 
-                        final isSelected = selectedOptions.contains(option.id);
+                  if (state is OptionsSuccess) {
+                    return SingleChildScrollView(
+                      scrollDirection: .horizontal,
+                      child: Row(
+                        children: List.generate(
+                          state.optionsModel.length,
+                              (index) {
+                            final option = state.optionsModel[index];
+                            final isSelected =
+                            selectedOptions.contains(option.id);
 
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: ToppingCard(
-                            imageUrl: option.image,
-                            title: option.name,
-                            onAdd: loadingOptions
-                                ? () {}
-                                : () {
-                                    final id = option.id;
-                                    if (selectedOptions.contains(id)) {
-                                      setState(() {
-                                        selectedOptions.remove(id);
-                                      });
-                                    } else {
-                                      setState(() {
-                                        selectedOptions.add(id);
-                                      });
-                                    }
-                                  },
-                            color: isSelected
-                                ? Colors.green.withOpacity(0.2)
-                                : AppColors.primary.withOpacity(0.1),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: ToppingCard(
+                                imageUrl: option.image,
+                                title: option.name,
+                                onAdd: () {
+                                  final id = option.id;
+                                  setState(() {
+                                    isSelected
+                                        ? selectedOptions.remove(id)
+                                        : selectedOptions.add(id);
+                                  });
+                                },
+                                color: isSelected
+                                    ? Colors.green.withOpacity(0.2)
+                                    : AppColors.primary.withOpacity(0.1),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (state is OptionsFailure) {
+                    return Text(state.errMessage);
+                  }
+
+                  return const SizedBox();
+                },
               ),
 
               const Gap(100),
@@ -219,7 +207,8 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
               crossAxisAlignment: .start,
               children: [
                 Text('Total', style: Styles.boldTextStyle20),
-                Text('\$${widget.productModel.price}', style: Styles.boldTextStyle20),
+                Text('\$${widget.productModel.price}',
+                    style: Styles.boldTextStyle20),
               ],
             ),
 
@@ -232,9 +221,8 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
               horizontalPadding: 10,
               onTap: () async {
                 try {
-                  setState(() {
-                    cartLoading = true;
-                  });
+                  setState(() => cartLoading = true);
+
                   final cartItem = CartModel(
                     productId: int.parse(widget.productModel.id),
                     quantity: 1,
@@ -242,25 +230,46 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                     toppings: selectedTopping,
                     sideOptions: selectedOptions,
                   );
+
                   await cartRepo.addToCart(
                     CartRequestModel(cartItems: [cartItem]),
                   );
+
                   if (!mounted) return;
-                  setState(() {
-                    cartLoading = false;
-                  });
-                  if (!mounted) return;
+                  setState(() => cartLoading = false);
                   AppSnackBar.showSuccess(context, 'Item added to cart');
                 } catch (e) {
                   if (!mounted) return;
-                  setState(() {
-                    cartLoading = false;
-                  });
+                  setState(() => cartLoading = false);
                   AppSnackBar.showError(context, e.toString());
                 }
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// -------------------------
+  ///  SKELETON ROW BUILDER
+  /// -------------------------
+  Widget _loadingRow() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: List.generate(
+          4,
+              (index) => Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: ToppingCard(
+              imageUrl:
+              'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxuutX8HduKl2eiBeqSWo1VdXcOS9UxzsKhQ&s',
+              title: 'Loading...',
+              onAdd: () {},
+              color: AppColors.primary.withOpacity(0.1),
+            ),
+          ),
         ),
       ),
     );
