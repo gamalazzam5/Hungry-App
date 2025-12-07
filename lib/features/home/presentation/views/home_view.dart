@@ -42,6 +42,7 @@ class _HomeViewState extends State<HomeView> {
 
     return RefreshIndicator(
       color: AppColors.primary,
+      backgroundColor: Colors.white,
       onRefresh: () async {
         if (!authCubit.isGuest) await authCubit.getProfileData();
         await context.read<ProductCubit>().getProducts();

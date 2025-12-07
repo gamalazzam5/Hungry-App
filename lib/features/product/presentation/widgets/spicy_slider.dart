@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
-import '../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_colors.dart';
 
 class SpicySlider extends StatelessWidget {
   const SpicySlider({super.key, required this.value, required this.onChanged, required this.image});

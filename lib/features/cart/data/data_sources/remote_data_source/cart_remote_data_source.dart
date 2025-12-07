@@ -1,6 +1,6 @@
-import '../models/cart_model.dart';
+import '../../models/cart_model.dart';
 
-abstract class CartRepo {
+abstract class CartRemoteDataSource {
   Future<void> addToCart(CartRequestModel cartData);
 
   Future<GetCartResponse> getCartData();
