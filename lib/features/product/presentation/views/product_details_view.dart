@@ -8,7 +8,6 @@ import 'package:hungry/core/constants/app_styles.dart';
 import 'package:hungry/core/shared/custom_button.dart';
 import 'package:hungry/core/utils/custom_snack_bar.dart';
 import 'package:hungry/features/cart/data/models/cart_model.dart';
-import 'package:hungry/features/cart/data/repos/old_cart_repo.dart';
 import 'package:hungry/features/home/data/models/product_model.dart';
 import 'package:hungry/features/home/presentation/manager/cubits/options_cubit/options_cubit.dart';
 import 'package:hungry/features/home/presentation/manager/cubits/options_cubit/options_states.dart';
@@ -220,12 +219,13 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
               builder: (context, state) {
                 if (state is AddToCartLoading) {
                   return CustomButton(
-                      withIcon: true,
-                      iconData: CupertinoIcons.cart_badge_plus,
-                      iconColor: Colors.white,
-                      text: 'Add To Cart',
-                      horizontalPadding: 10,
-                  isLoading: true,);
+                    withIcon: true,
+                    iconData: CupertinoIcons.cart_badge_plus,
+                    iconColor: Colors.white,
+                    text: 'Add To Cart',
+                    horizontalPadding: 10,
+                    isLoading: true,
+                  );
                 } else {
                   return CustomButton(
                     withIcon: true,
@@ -242,7 +242,7 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                         sideOptions: selectedOptions,
                       );
                       await context.read<AddToCartCubit>().addToCart(
-                          CartRequestModel(cartItems: [cartItem])
+                        CartRequestModel(cartItems: [cartItem]),
                       );
                     },
                   );
@@ -271,7 +271,7 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                   'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxuutX8HduKl2eiBeqSWo1VdXcOS9UxzsKhQ&s',
               title: 'Loading...',
               onAdd: () {},
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
             ),
           ),
         ),
