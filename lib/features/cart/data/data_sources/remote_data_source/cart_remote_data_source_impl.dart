@@ -44,9 +44,10 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
       final response = await apiService.delete('/cart/remove/$itemId');
       debugPrint(response.toString());
     } catch (e) {
-      if(e is ApiError){
-        ApiExceptions.handleError(e.toString() as DioException);
+      if(e is DioException){
+        ApiExceptions.handleError(e );
       }
+     debugPrint(e.toString());
     }
   }
 }
