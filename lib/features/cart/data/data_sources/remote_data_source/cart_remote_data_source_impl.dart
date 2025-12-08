@@ -31,8 +31,8 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
       final response = await apiService.get('/cart');
       return GetCartResponse.fromJson(response);
     } catch (e) {
-      if(e is ApiError){
-        ApiExceptions.handleError(e.toString() as DioException);
+      if(e is DioException){
+        ApiExceptions.handleError(e);
       }
       rethrow;
     }

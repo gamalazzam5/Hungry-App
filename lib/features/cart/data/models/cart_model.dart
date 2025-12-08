@@ -23,7 +23,6 @@ class CartModel {
     };
   }
 }
-
 class CartRequestModel {
   final List<CartModel> cartItems;
 
@@ -47,9 +46,21 @@ class GetCartResponse {
 
   factory GetCartResponse.fromJson(Map<String, dynamic> json) {
     return GetCartResponse(
-      code: json['code']??200,
+      code: json['code'] ?? 200,
       message: json['message'],
       data: CartData.fromJson(json['data']),
+    );
+  }
+
+  GetCartResponse copyWith({
+    int? code,
+    String? message,
+    CartData? data,
+  }) {
+    return GetCartResponse(
+      code: code ?? this.code,
+      message: message ?? this.message,
+      data: data ?? this.data,
     );
   }
 }
@@ -65,7 +76,29 @@ class CartData {
     return CartData(
       id: json['id'],
       totalPrice: json['total_price'],
-      items: (json['items'] as List).map((e) => CartItemModel.fromJson(e)).toList(),
+      items: (json['items'] as List)
+          .map((e) => CartItemModel.fromJson(e))
+          .toList(),
+    );
+  }
+
+  CartData copyWith({
+    int? id,
+    String? totalPrice,
+    List<CartItemModel>? items,
+  }) {
+    return CartData(
+      id: id ?? this.id,
+      totalPrice: totalPrice ?? this.totalPrice,
+      items: items ?? this.items,
+    );
+  }
+
+  CartData copyWithNewItems(List<CartItemModel> updatedItems) {
+    return CartData(
+      id: id,
+      totalPrice: totalPrice,
+      items: updatedItems,
     );
   }
 }
@@ -95,13 +128,13 @@ class CartItemModel {
 
   factory CartItemModel.fromJson(Map<String, dynamic> json) {
     return CartItemModel(
-      itemId: json['item_id']??0,
-      productId: json['product_id']??0,
-      image: json['image']??'',
-      name: json['name']??'',
-      price: json['price']??'0',
-      quantity: json['quantity']??"",
-      spicy: json['spicy'].toString()??'',
+      itemId: json['item_id'] ?? 0,
+      productId: json['product_id'] ?? 0,
+      image: json['image'] ?? '',
+      name: json['name'] ?? '',
+      price: json['price'] ?? '0',
+      quantity: json['quantity'] ?? 1,
+      spicy: json['spicy'].toString(),
       toppings: (json['toppings'] as List)
           .map((e) => CartToppings.fromJson(e))
           .toList(),

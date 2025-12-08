@@ -46,6 +46,7 @@ class AppRouter {
                 create: (_) => OptionsCubit(getIt<ProductRepo>())..getOptions(),
               ),
               BlocProvider(create: (_) => AddToCartCubit(getIt<CartRepo>())),
+
             ],
             child: ProductDetailsView(productModel: product),
           );

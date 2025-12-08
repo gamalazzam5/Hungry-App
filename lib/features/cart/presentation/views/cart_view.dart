@@ -6,6 +6,8 @@ import 'package:hungry/core/constants/app_styles.dart';
 import 'package:hungry/core/shared/custom_button.dart';
 import 'package:hungry/core/utils/custom_snack_bar.dart';
 import 'package:hungry/features/cart/presentation/manager/cubits/get_cart_cubit/get_cart_cubit.dart';
+import 'package:hungry/features/cart/presentation/manager/cubits/remove_item_from_cart/remove_item_cubit.dart';
+import 'package:hungry/features/cart/presentation/manager/cubits/remove_item_from_cart/remove_item_state.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -43,9 +45,7 @@ class _CartViewState extends State<CartView> {
               state is GetCartLoading || state is GetCartInitial;
 
           if (state is GetCartFailure) {
-            return Center(
-              child: Text(state.errMessage, style: Styles.boldTextStyle16),
-            );
+            AppSnackBar.showError(context, state.errMessage);
           }
 
           GetCartResponse? cartResponse;
@@ -76,31 +76,59 @@ class _CartViewState extends State<CartView> {
                           ? null
                           : cartResponse!.data.items[index];
 
-                      return CartItem(
-                        isSkeleton: isLoading,
-                        text: item?.name ?? "",
-                        desc: isLoading
-                            ? ""
-                            : "Spicy level: ${((double.tryParse(item?.spicy.toString() ?? "0") ?? 0) * 100).toStringAsFixed(0)}%",
-                        image: item?.image ?? "",
-                        number: isLoading ? 1 : quantities[index],
-                        onAdd: isLoading
-                            ? null
-                            : () => getCartCubit.increment(index),
-                        onMin: isLoading
-                            ? null
-                            : () => getCartCubit.decrement(index),
+                      return BlocBuilder<RemoveItemCubit, RemoveItemState>(
+                        builder: (_, removeState) {
+                          final isRemoving =
+                              removeState is RemoveItemLoading && removeState.itemId == item?.itemId;
 
-                        /// REMOVE (later using RemoveItemCubit)
-                        isLoadingRemove: false,
-                        onRemove: isLoading
-                            ? null
-                            : () {
-                                AppSnackBar.showSuccess(
-                                  context,
-                                  "Remove will be added in next step 💪",
-                                );
-                              },
+                          return CartItem(
+                            isSkeleton: isLoading,
+                            text: item?.name ?? "",
+                            desc: isLoading
+                                ? ""
+                                : "Spicy level: ${((double.tryParse(item?.spicy.toString() ?? "0") ?? 0) * 100).toStringAsFixed(0)}%",
+                            image: item?.image ?? "",
+                            number: isLoading ? 1 : quantities[index],
+                            onAdd: isLoading
+                                ? null
+                                : () => getCartCubit.increment(index),
+                            onMin: isLoading
+                                ? null
+                                : () => getCartCubit.decrement(index),
+
+                            isLoadingRemove: isRemoving,
+                            onRemove: isLoading
+                                ? null
+                                : () async {
+                                    final removeCubit = context
+                                        .read<RemoveItemCubit>();
+
+                                    await removeCubit.removeItemFromCart(
+                                      item!.itemId,
+                                    );
+
+                                    final rs = removeCubit.state;
+
+                                    if (rs is RemoveItemSuccess) {
+                                      getCartCubit.removeItemLocal(index);
+                                      if (!mounted) return;
+
+                                      AppSnackBar.showSuccess(
+                                        context,
+                                        "Item removed successfully",
+                                      );
+                                    }
+
+                                    if (rs is RemoveItemFailure) {
+                                      if (!mounted) return;
+                                      AppSnackBar.showError(
+                                        context,
+                                        rs.errMessage,
+                                      );
+                                    }
+                                  },
+                          );
+                        },
                       );
                     },
                   ),
@@ -127,11 +155,10 @@ class _CartViewState extends State<CartView> {
                   ],
                 ),
                 child: Row(
-                  mainAxisAlignment: .spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-
                     Column(
-                      crossAxisAlignment: .start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text("Total Amount", style: Styles.boldTextStyle16),
                         Text(
