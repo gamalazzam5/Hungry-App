@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_styles.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_styles.dart';
 
 class OrderSummary extends StatelessWidget {
   const OrderSummary({super.key, required this.title, required this.price,  this.isBold= false,  this.isSmall = false});

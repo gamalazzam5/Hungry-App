@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
-import '../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_colors.dart';
 import 'order_summary.dart';
 
 class OrderDetails extends StatelessWidget {

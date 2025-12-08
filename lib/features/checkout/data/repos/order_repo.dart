@@ -1,18 +1,17 @@
-import 'package:hungry/core/network/api_service.dart';
-import 'package:hungry/features/checkout/data/models/Order_model.dart';
+import 'package:hungry/features/checkout/data/data_sources/remote_data_sources/order_remote_data_source.dart';
 
-class OrderRepo {
-  final ApiService _apiService = ApiService();
+import '../models/Order_model.dart';
 
+abstract class OrderRepo {
+  Future<void> sendOrder(OrderModel orderModel);
+}
+class OrderRepoImpl implements OrderRepo{
+  final OrderRemoteDataSource orderRemoteDataSource;
+
+  OrderRepoImpl({required this.orderRemoteDataSource});
+  @override
   Future<void> sendOrder(OrderModel orderModel) async {
-    try {
-      final response = await _apiService.post(
-        '/orders',
-        data: orderModel.toJson(),
-      );
-      print(response);
-    } catch (e) {
-      print(e);
-    }
+      await orderRemoteDataSource.sendOrder(orderModel);
   }
+
 }

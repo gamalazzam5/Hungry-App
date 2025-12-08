@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungry/features/cart/data/repos/cart_repo.dart';
 import 'package:hungry/features/cart/presentation/manager/cubits/get_cart_cubit/get_cart_cubit.dart';
-import 'package:hungry/features/checkout/views/checkout_view.dart';
+import 'package:hungry/features/checkout/presentation/manager/save_order_cubit.dart';
 import 'package:hungry/features/home/data/models/product_model.dart';
 import 'package:hungry/features/product/presentation/manager/add_to_cart_cubit.dart';
 import 'package:hungry/root.dart';
@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/views/login_view.dart';
 import '../../features/auth/presentation/views/signup_view.dart';
+import '../../features/checkout/presentation/views/checkout_view.dart';
 import '../../features/home/data/repos/product_repo.dart';
 import '../../features/home/presentation/manager/cubits/options_cubit/options_cubit.dart';
 import '../../features/home/presentation/manager/cubits/toppings_cubit/toppings_cubit.dart';
@@ -58,10 +59,13 @@ class AppRouter {
         path: AppRoutePaths.checkout,
         builder: (context, state) {
           final data = state.extra as Map<String, dynamic>;
-          return CheckoutView(
-            totalPrice: data['totalPrice'],
-            items: data['items'],
-            quantities: data['quantities'],
+          return BlocProvider(
+            create: (_) => SaveOrderCubit(getIt()),
+            child: CheckoutView(
+              totalPrice: data['totalPrice'],
+              items: data['items'],
+              quantities: data['quantities'],
+            ),
           );
         },
       ),

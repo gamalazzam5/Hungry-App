@@ -14,7 +14,7 @@ import 'package:hungry/features/auth/data/model/user_model.dart';
 import 'package:hungry/features/auth/presentation/manager/cubits/auth_cubit/auth_cubit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import '../../../checkout/widgets/payment_tile.dart';
+import '../../../checkout/presentation/widgets/payment_tile.dart';
 import '../widgets/profile_text_field.dart';
 
 class ProfileView extends StatefulWidget {

@@ -5,16 +5,12 @@ import 'package:hungry/core/constants/app_colors.dart';
 import 'package:hungry/core/constants/app_styles.dart';
 import 'package:hungry/features/cart/data/models/cart_model.dart';
 import 'package:hungry/features/checkout/data/models/Items.dart';
-import 'package:hungry/features/checkout/data/repos/order_repo.dart';
-import 'package:hungry/features/checkout/widgets/order_details.dart';
-import 'package:hungry/features/checkout/widgets/payment_tile.dart';
-
-import '../../../core/network/api_error.dart';
-import '../../../core/shared/custom_button.dart';
-import '../../../core/utils/custom_snack_bar.dart';
-import '../../auth/data/model/user_model.dart';
-import '../../auth/data/repos/old_version_repo.dart';
-import '../data/models/Order_model.dart';
+import '../../../../core/network/api_error.dart';
+import '../../../../core/shared/custom_button.dart';
+import '../../../../core/utils/custom_snack_bar.dart';
+import '../../data/models/Order_model.dart';
+import '../widgets/order_details.dart';
+import '../widgets/payment_tile.dart';
 import '../widgets/success_dialog.dart';
 
 class CheckoutView extends StatefulWidget {
@@ -36,28 +32,10 @@ class CheckoutView extends StatefulWidget {
 class _CheckoutViewState extends State<CheckoutView> {
   String selectedMethod = 'Cash';
   bool value = false;
-  AuthRepo authRepo = AuthRepo();
-  UserModel? userModel;
-  OrderRepo orderRepo = OrderRepo();
+
   bool isLoading = false;
   bool isOrdered = false;
 
-  Future<void> getProfileData() async {
-    try {
-      final user = await authRepo.getProfileData();
-      if (!mounted) return;
-      setState(() {
-        userModel = user;
-      });
-    } catch (e) {
-      String errMessage = 'Error in profile';
-      if (e is ApiError) {
-        errMessage = e.message;
-      }
-      if (!mounted) return;
-      AppSnackBar.showError(context, errMessage);
-    }
-  }
 
   Future<bool> saveOrder() async {
     final items = List<Items>.generate(widget.items.length, (index) {
@@ -89,7 +67,6 @@ class _CheckoutViewState extends State<CheckoutView> {
 
   @override
   void initState() {
-    getProfileData();
     super.initState();
   }
 

@@ -9,11 +9,7 @@ import 'package:hungry/features/cart/presentation/manager/cubits/get_cart_cubit/
 import 'package:hungry/features/cart/presentation/manager/cubits/remove_item_from_cart/remove_item_cubit.dart';
 import 'package:hungry/features/cart/presentation/manager/cubits/remove_item_from_cart/remove_item_state.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routes/app_router.dart';
-import '../../../auth/data/repos/old_version_repo.dart';
-import '../../data/models/cart_model.dart';
 import '../manager/cubits/get_cart_cubit/get_cart_state.dart';
 import '../widgets/cart_item.dart';
 
@@ -99,9 +95,11 @@ class _CartViewState extends State<CartView> {
 
                           if (removeCubit.state is RemoveItemSuccess) {
                             getCartCubit.removeItemLocal(index);
+                            if(!context.mounted) return;
                             AppSnackBar.showSuccess(
                                 context, "Item removed successfully");
                           } else if (removeCubit.state is RemoveItemFailure) {
+                            if(!context.mounted) return;
                             AppSnackBar.showError(
                                 context,
                                 (removeCubit.state as RemoveItemFailure)
@@ -128,7 +126,7 @@ class _CartViewState extends State<CartView> {
                 child: ListView.builder(
                   padding: const EdgeInsets.only(bottom: 120, top: 30),
                   itemCount: 6,
-                  itemBuilder: (_, __) => CartItem(
+                  itemBuilder: (_, _) => CartItem(
                     isSkeleton: true,
                     text: "",
                     desc: "",
