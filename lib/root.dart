@@ -41,46 +41,56 @@ class _RootState extends State<Root> {
         BlocProvider(create: (_) => GetCartCubit(getIt<CartRepo>())..getCartData()),
         BlocProvider(create: (_) => RemoveItemCubit(getIt<CartRepo>())),
       ],
-      child: Scaffold(
-        body: IndexedStack(index: currentIndex, children: screens),
+      child: Builder(
+        builder: (context){
+          return  Scaffold(
+            body: IndexedStack(index: currentIndex, children: screens),
 
-        bottomNavigationBar: Padding(
-          padding: const EdgeInsets.all(10),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(30),
-            child: BottomNavigationBar(
-              backgroundColor: AppColors.primary,
-              elevation: 0,
-              type: BottomNavigationBarType.fixed,
-              currentIndex: currentIndex,
-              selectedItemColor: Colors.white,
-              unselectedItemColor: Colors.grey.shade700,
+            bottomNavigationBar: Padding(
+              padding: const EdgeInsets.all(10),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(30),
+                child: BottomNavigationBar(
+                  backgroundColor: AppColors.primary,
+                  elevation: 0,
+                  type: BottomNavigationBarType.fixed,
+                  currentIndex: currentIndex,
+                  selectedItemColor: Colors.white,
+                  unselectedItemColor: Colors.grey.shade700,
 
-              onTap: (index) {
-                setState(() => currentIndex = index);
-              },
+                  onTap: (index)  async{
+                    if(index == currentIndex) return;
+                    setState(() => currentIndex = index);
+                    if (index == 1) {
+                      await context.read<GetCartCubit>().getCartData();
+                    }
 
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(CupertinoIcons.home),
-                  label: 'Home',
+                  },
+
+                  items: const [
+                    BottomNavigationBarItem(
+                      icon: Icon(CupertinoIcons.home),
+                      label: 'Home',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(CupertinoIcons.cart),
+                      label: 'Cart',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.local_restaurant_sharp),
+                      label: 'History',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(CupertinoIcons.profile_circled),
+                      label: 'Profile',
+                    ),
+                  ],
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(CupertinoIcons.cart),
-                  label: 'Cart',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.local_restaurant_sharp),
-                  label: 'History',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(CupertinoIcons.profile_circled),
-                  label: 'Profile',
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
+
       ),
     );
   }

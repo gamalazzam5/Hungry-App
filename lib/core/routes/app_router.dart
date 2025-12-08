@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungry/features/cart/data/repos/cart_repo.dart';
+import 'package:hungry/features/cart/presentation/manager/cubits/get_cart_cubit/get_cart_cubit.dart';
 import 'package:hungry/features/checkout/views/checkout_view.dart';
 import 'package:hungry/features/home/data/models/product_model.dart';
 import 'package:hungry/features/product/presentation/manager/add_to_cart_cubit.dart';
@@ -46,6 +47,7 @@ class AppRouter {
                 create: (_) => OptionsCubit(getIt<ProductRepo>())..getOptions(),
               ),
               BlocProvider(create: (_) => AddToCartCubit(getIt<CartRepo>())),
+              BlocProvider(create: (_) => GetCartCubit(getIt<CartRepo>())),
 
             ],
             child: ProductDetailsView(productModel: product),

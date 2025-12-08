@@ -26,7 +26,6 @@ class CartView extends StatefulWidget {
 
 class _CartViewState extends State<CartView> {
   bool isGuest = false;
-  AuthRepo authRepo = AuthRepo();
 
   late GetCartCubit getCartCubit;
 
@@ -38,179 +37,174 @@ class _CartViewState extends State<CartView> {
 
   @override
   Widget build(BuildContext context) {
-    if (!isGuest) {
-      return BlocBuilder<GetCartCubit, GetCartState>(
-        builder: (context, state) {
-          final bool isLoading =
-              state is GetCartLoading || state is GetCartInitial;
+    if (isGuest) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Text("This is guest Mode, please Login"),
+            SizedBox(height: 20),
+          ],
+        ),
+      );
+    }
 
-          if (state is GetCartFailure) {
+    return BlocConsumer<GetCartCubit, GetCartState>(
+      listener: (context, state) {
+        if (state is GetCartFailure) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
             AppSnackBar.showError(context, state.errMessage);
-          }
+          });
+        }
+      },
+      builder: (context, state) {
+        final bool isLoading = state is GetCartLoading || state is GetCartInitial;
 
-          GetCartResponse? cartResponse;
-          List<int> quantities = [];
+        if (state is GetCartSuccess) {
+          final items = state.cartResponse.data.items;
+          final quantities = state.quantities;
 
-          if (state is GetCartSuccess) {
-            cartResponse = state.cartResponse;
-            quantities = state.quantities;
-          }
+          return Scaffold(
+            appBar: AppBar(backgroundColor: Colors.white, toolbarHeight: 0),
+            body: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ListView.builder(
+                padding: const EdgeInsets.only(bottom: 120, top: 30),
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
 
-          return RefreshIndicator(
-            backgroundColor: Colors.white,
-            color: AppColors.primary,
-            onRefresh: () async {
-              await getCartCubit.getCartData();
-            },
-            child: Scaffold(
-              appBar: AppBar(backgroundColor: Colors.white, toolbarHeight: 0),
-              body: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Skeletonizer(
-                  enabled: isLoading,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.only(bottom: 120, top: 30),
-                    itemCount: isLoading ? 4 : cartResponse!.data.items.length,
-                    itemBuilder: (context, index) {
-                      final item = isLoading
-                          ? null
-                          : cartResponse!.data.items[index];
+                  return BlocBuilder<RemoveItemCubit, RemoveItemState>(
+                    builder: (_, removeState) {
+                      final isRemoving = removeState is RemoveItemLoading &&
+                          removeState.itemId == item.itemId;
 
-                      return BlocBuilder<RemoveItemCubit, RemoveItemState>(
-                        builder: (_, removeState) {
-                          final isRemoving =
-                              removeState is RemoveItemLoading && removeState.itemId == item?.itemId;
+                      return CartItem(
+                        isSkeleton: false,
+                        text: item.name,
+                        desc:
+                        "Spicy level: ${(double.parse(item.spicy) * 100).toStringAsFixed(0)}%",
+                        image: item.image,
+                        number: quantities[index],
+                        onAdd: () => getCartCubit.increment(index),
+                        onMin: () => getCartCubit.decrement(index),
 
-                          return CartItem(
-                            isSkeleton: isLoading,
-                            text: item?.name ?? "",
-                            desc: isLoading
-                                ? ""
-                                : "Spicy level: ${((double.tryParse(item?.spicy.toString() ?? "0") ?? 0) * 100).toStringAsFixed(0)}%",
-                            image: item?.image ?? "",
-                            number: isLoading ? 1 : quantities[index],
-                            onAdd: isLoading
-                                ? null
-                                : () => getCartCubit.increment(index),
-                            onMin: isLoading
-                                ? null
-                                : () => getCartCubit.decrement(index),
+                        isLoadingRemove: isRemoving,
+                        onRemove: () async {
+                          final removeCubit = context.read<RemoveItemCubit>();
 
-                            isLoadingRemove: isRemoving,
-                            onRemove: isLoading
-                                ? null
-                                : () async {
-                                    final removeCubit = context
-                                        .read<RemoveItemCubit>();
+                          await removeCubit.removeItemFromCart(item.itemId);
 
-                                    await removeCubit.removeItemFromCart(
-                                      item!.itemId,
-                                    );
+                          if (!mounted) return;
 
-                                    final rs = removeCubit.state;
-
-                                    if (rs is RemoveItemSuccess) {
-                                      getCartCubit.removeItemLocal(index);
-                                      if (!mounted) return;
-
-                                      AppSnackBar.showSuccess(
-                                        context,
-                                        "Item removed successfully",
-                                      );
-                                    }
-
-                                    if (rs is RemoveItemFailure) {
-                                      if (!mounted) return;
-                                      AppSnackBar.showError(
-                                        context,
-                                        rs.errMessage,
-                                      );
-                                    }
-                                  },
-                          );
+                          if (removeCubit.state is RemoveItemSuccess) {
+                            getCartCubit.removeItemLocal(index);
+                            AppSnackBar.showSuccess(
+                                context, "Item removed successfully");
+                          } else if (removeCubit.state is RemoveItemFailure) {
+                            AppSnackBar.showError(
+                                context,
+                                (removeCubit.state as RemoveItemFailure)
+                                    .errMessage);
+                          }
                         },
                       );
                     },
-                  ),
-                ),
+                  );
+                },
               ),
-              bottomSheet: Container(
-                height: 80,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(32),
-                    topRight: Radius.circular(32),
+            ),
+
+            bottomSheet: _buildBottomSheet(state.total, state),
+          );
+        }
+
+        if (isLoading) {
+          return Scaffold(
+            body: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Skeletonizer(
+                enabled: true,
+                child: ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 120, top: 30),
+                  itemCount: 6,
+                  itemBuilder: (_, __) => CartItem(
+                    isSkeleton: true,
+                    text: "",
+                    desc: "",
+                    image: "",
+                    number: 1,
+                    isLoadingRemove: false,
+                    onAdd: null,
+                    onMin: null,
+                    onRemove: null,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withValues(alpha: .3),
-                      blurRadius: 20,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Total Amount", style: Styles.boldTextStyle16),
-                        Text(
-                          isLoading || state is! GetCartSuccess
-                              ? "--.--"
-                              : "\$${state.total.toStringAsFixed(2)}",
-                          style: Styles.boldTextStyle16,
-                        ),
-                      ],
-                    ),
-                    CustomButton(
-                      text: "Checkout",
-                      onTap: (isLoading || state is! GetCartSuccess)
-                          ? null
-                          : () => GoRouter.of(context).push(
-                              AppRoutePaths.checkout,
-                              extra: {
-                                'totalPrice': state.total.toStringAsFixed(2),
-                                'items': state.cartResponse.data.items,
-                                'quantities': state.quantities,
-                              },
-                            ),
-                    ),
-                  ],
                 ),
               ),
             ),
           );
-        },
-      );
-    } else {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Center(
-            child: Text(
-              'This is guest Mode please Login',
-              style: Styles.boldTextStyle16,
+        }
+
+        return Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: .center,
+              children: [
+                const Text("Couldn't load cart ❌"),
+                const Gap( 20),
+               CustomButton(text: 'Retry',onTap: ()=>getCartCubit.getCartData(),
+               )
+              ],
             ),
           ),
-          const Gap(24),
-          CustomButton(
-            width: 200,
-            height: 50,
-            textColor: Colors.white,
-            onTap: () {
-              GoRouter.of(context).go(AppRoutePaths.loginView);
-            },
-            text: 'Go To Login',
+        );
+      },
+    );
+  }
+
+  Widget _buildBottomSheet(double total, GetCartSuccess state) {
+    return Container(
+      height: 80,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(32),
+          topRight: Radius.circular(32),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: .3),
+            blurRadius: 20,
+            spreadRadius: 5,
           ),
         ],
-      );
-    }
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+               Text("Total Amount",style: Styles.boldTextStyle16,),
+              Text("\$${total.toStringAsFixed(2)}",style: Styles.boldTextStyle16,),
+            ],
+          ),
+          CustomButton(
+            text: "Checkout",
+            onTap: () {
+              GoRouter.of(context).push(
+                AppRoutePaths.checkout,
+                extra: {
+                  'totalPrice': total.toStringAsFixed(2),
+                  'items': state.cartResponse.data.items,
+                  'quantities': state.quantities,
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 }
