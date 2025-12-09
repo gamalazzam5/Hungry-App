@@ -184,6 +184,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                 }
                 if (state is SaveOrderSuccess) {
                   if (!context.mounted) return;
+                  ///here i want add remove cart as local as i didn't have endpoint for clear All cart;
                   Navigator.pop(context);
 
                   showDialog(

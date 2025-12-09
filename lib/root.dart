@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hungry/core/constants/app_colors.dart';
 import 'package:hungry/core/utils/service_locator.dart';
-import 'package:hungry/features/cart/data/repos/cart_repo.dart';
+import 'package:hungry/features/auth/presentation/manager/cubits/auth_cubit/auth_cubit.dart';
 import 'package:hungry/features/cart/presentation/manager/cubits/get_cart_cubit/get_cart_cubit.dart';
 import 'package:hungry/features/cart/presentation/manager/cubits/remove_item_from_cart/remove_item_cubit.dart';
 import 'package:hungry/features/orderHistory/views/order_history_view.dart';
@@ -38,8 +38,9 @@ class _RootState extends State<Root> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => GetCartCubit(getIt<CartRepo>())..getCartData()),
-        BlocProvider(create: (_) => RemoveItemCubit(getIt<CartRepo>())),
+        BlocProvider(create: (_) => GetCartCubit(getIt())),
+        BlocProvider(create: (_) => RemoveItemCubit(getIt())),
+        BlocProvider(create: (_) => AuthCubit(getIt())),
       ],
       child: Builder(
         builder: (context){

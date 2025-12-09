@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hungry/core/constants/app_styles.dart';
 import 'package:hungry/core/shared/custom_button.dart';
 import 'package:hungry/core/utils/custom_snack_bar.dart';
+import 'package:hungry/features/auth/presentation/manager/cubits/auth_cubit/auth_cubit.dart';
 import 'package:hungry/features/cart/presentation/manager/cubits/get_cart_cubit/get_cart_cubit.dart';
 import 'package:hungry/features/cart/presentation/manager/cubits/remove_item_from_cart/remove_item_cubit.dart';
 import 'package:hungry/features/cart/presentation/manager/cubits/remove_item_from_cart/remove_item_state.dart';
@@ -21,7 +22,7 @@ class CartView extends StatefulWidget {
 }
 
 class _CartViewState extends State<CartView> {
-  bool isGuest = false;
+ late bool isGuest ;
 
   late GetCartCubit getCartCubit;
 
@@ -29,6 +30,8 @@ class _CartViewState extends State<CartView> {
   void initState() {
     super.initState();
     getCartCubit = context.read<GetCartCubit>();
+    isGuest = context.read<AuthCubit>().isGuest;
+    getCartCubit.getCartData();
   }
 
   @override

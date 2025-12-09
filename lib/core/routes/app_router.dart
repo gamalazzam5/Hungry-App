@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hungry/features/cart/data/repos/cart_repo.dart';
 import 'package:hungry/features/cart/presentation/manager/cubits/get_cart_cubit/get_cart_cubit.dart';
 import 'package:hungry/features/checkout/presentation/manager/save_order_cubit.dart';
 import 'package:hungry/features/home/data/models/product_model.dart';
@@ -7,8 +6,6 @@ import 'package:hungry/features/product/presentation/manager/add_to_cart_cubit.d
 import 'package:hungry/root.dart';
 import 'package:hungry/features/splash/views/splash_view.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../features/auth/presentation/manager/cubits/auth_cubit/auth_cubit.dart';
 import '../../features/auth/presentation/views/login_view.dart';
 import '../../features/auth/presentation/views/signup_view.dart';
 import '../../features/checkout/presentation/views/checkout_view.dart';
@@ -48,8 +45,8 @@ class AppRouter {
               BlocProvider(
                 create: (_) => OptionsCubit(getIt<ProductRepo>())..getOptions(),
               ),
-              BlocProvider(create: (_) => AddToCartCubit(getIt<CartRepo>())),
-              BlocProvider(create: (_) => GetCartCubit(getIt<CartRepo>())),
+              BlocProvider(create: (_) => AddToCartCubit(getIt())),
+              BlocProvider(create: (_) => GetCartCubit(getIt())),
             ],
             child: ProductDetailsView(productModel: product),
           );
@@ -60,9 +57,8 @@ class AppRouter {
         builder: (context, state) {
           final data = state.extra as Map<String, dynamic>;
           return MultiBlocProvider(
-            providers: [
-              BlocProvider(create: (_) => SaveOrderCubit(getIt())),
-              BlocProvider(create: (_) => AuthCubit(getIt())),
+            providers: [BlocProvider(create: (_) => SaveOrderCubit(getIt())),
+              BlocProvider(create:(_)=> getIt<GetCartCubit>())
             ],
             child: CheckoutView(
               totalPrice: data['totalPrice'],

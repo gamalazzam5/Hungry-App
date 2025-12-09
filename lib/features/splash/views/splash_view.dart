@@ -39,7 +39,7 @@ class _SplashViewState extends State<SplashView>
       listener: (BuildContext context, state) async {
         await animation.completeFuture;
 
-        if (!mounted) return;
+        if (!context.mounted) return;
 
         if (state is AuthAuthenticated) {
           context.go(AppRoutePaths.root);
@@ -59,7 +59,7 @@ class _SplashViewState extends State<SplashView>
                 child: Center(
                   child: AnimatedBuilder(
                     animation: animation.controller,
-                    builder: (_, __) {
+                    builder: (_, _) {
                       return Opacity(
                         opacity: animation.logoOpacity.value,
                         child: Transform.scale(
@@ -74,7 +74,7 @@ class _SplashViewState extends State<SplashView>
 
               AnimatedBuilder(
                 animation: animation.controller,
-                builder: (_, __) {
+                builder: (_, _) {
                   return Opacity(
                     opacity: animation.imageOpacity.value,
                     child: Image.asset('assets/splash/splash.png'),

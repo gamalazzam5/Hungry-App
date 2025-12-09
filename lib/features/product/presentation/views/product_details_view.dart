@@ -212,6 +212,7 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                     context,
                     "Item added to cart Successfully 🔥",
                   );
+                  context.pop();
                 } else if (state is AddToCartFailure) {
                   AppSnackBar.showError(context, state.errMessage);
                 }
