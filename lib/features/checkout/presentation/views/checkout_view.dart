@@ -1,13 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:hungry/core/constants/app_colors.dart';
 import 'package:hungry/core/constants/app_styles.dart';
 import 'package:hungry/features/cart/data/models/cart_model.dart';
 import 'package:hungry/features/checkout/data/models/Items.dart';
-import '../../../../core/network/api_error.dart';
+import 'package:hungry/features/checkout/presentation/manager/save_order_cubit.dart';
+import 'package:hungry/features/checkout/presentation/manager/save_order_state.dart';
 import '../../../../core/shared/custom_button.dart';
 import '../../../../core/utils/custom_snack_bar.dart';
+import '../../../auth/data/model/user_model.dart';
 import '../../data/models/Order_model.dart';
 import '../widgets/order_details.dart';
 import '../widgets/payment_tile.dart';
@@ -32,15 +35,13 @@ class CheckoutView extends StatefulWidget {
 class _CheckoutViewState extends State<CheckoutView> {
   String selectedMethod = 'Cash';
   bool value = false;
-
-  bool isLoading = false;
-  bool isOrdered = false;
-
-
-  Future<bool> saveOrder() async {
+  UserModel? userModel;
+  late OrderModel orderModel;
+  OrderModel buildOrderModel() {
     final items = List<Items>.generate(widget.items.length, (index) {
       final product = widget.items[index];
       final qty = widget.quantities[index];
+
       return Items(
         productId: product.productId,
         quantity: qty,
@@ -49,25 +50,18 @@ class _CheckoutViewState extends State<CheckoutView> {
         sideOptions: product.sideOptions.map((e) => e.id).toList(),
       );
     });
-    final order = OrderModel(items: items);
-    try {
-      setState(() => isLoading = true);
-      await orderRepo.sendOrder(order);
-      if (!mounted) return false;
-      setState(() => isLoading = false);
-      AppSnackBar.showSuccess(context, 'Order Placed Successfully');
-      return true;
-    } catch (e) {
-      if (!mounted) return false;
-      setState(() => isLoading = false);
-      AppSnackBar.showError(context, e.toString());
-      return false;
-    }
+
+    return OrderModel(items: items);
   }
+ late SaveOrderCubit saveOrderCubit;
+
 
   @override
   void initState() {
     super.initState();
+    orderModel = buildOrderModel();
+    saveOrderCubit = context.read<SaveOrderCubit>();
+
   }
 
   @override
@@ -180,27 +174,37 @@ class _CheckoutViewState extends State<CheckoutView> {
                 ),
               ],
             ),
-            CustomButton(
-              iconData: CupertinoIcons.money_dollar_circle,
-              isLoading: isLoading,
+            BlocConsumer<SaveOrderCubit,SaveOrderState>(
+listener: (_,state){
+  if(state is SaveOrderFailure){
+    if (!context.mounted) return;
+    AppSnackBar.showError(context, state.errMessage);
+  }
+  if(state is SaveOrderSuccess){
+    if (!context.mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => successDialog(context),
+    );
+  }
+},
+              builder: (_,state){
+                bool loading = state is SaveOrderLoading;
+                return CustomButton(
+                  iconData: CupertinoIcons.money_dollar_circle,
+                  isLoading: loading ,
 
-              text: 'Pay now',
-              withIcon: true,
-              onTap: () async {
-                isOrdered ? Navigator.pop(context) : null;
-                final success = await saveOrder();
-                if (!success) return;
-                setState(() => isOrdered = true);
-                if (!mounted) return;
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return successDialog(context);
+                  text: 'Pay now',
+                  withIcon: true,
+                  horizontalPadding: 20,
+
+                  onTap: () async {
+                    context.read<SaveOrderCubit>().saveOrder(orderModel);
                   },
                 );
               },
 
-              horizontalPadding: 20,
             ),
           ],
         ),

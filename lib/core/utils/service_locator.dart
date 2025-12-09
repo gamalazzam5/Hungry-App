@@ -48,8 +48,12 @@ void setUpServiceLocator() {
     () => CartRepoImpl(cartRemoteDataSource: getIt()),
   );
   getIt.registerLazySingleton<AddToCartCubit>(() => AddToCartCubit(getIt()));
-  getIt.registerLazySingleton<OrderRemoteDataSourceImpl>(()=> OrderRemoteDataSourceImpl(apiService: getIt()));
-  getIt.registerLazySingleton<OrderRepoImpl>(() => OrderRepoImpl( orderRemoteDataSource: getIt()));
+  getIt.registerLazySingleton<OrderRemoteDataSource>(
+    () => OrderRemoteDataSourceImpl(apiService: getIt()),
+  );
+  getIt.registerLazySingleton<OrderRepo>(
+    () => OrderRepoImpl(orderRemoteDataSource: getIt()),
+  );
 
   getIt.registerLazySingleton<SaveOrderCubit>(() => SaveOrderCubit(getIt()));
 }

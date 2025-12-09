@@ -19,7 +19,7 @@ Widget successDialog(BuildContext context) {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(.4),
+              color: Colors.grey.withValues(alpha:.4),
               spreadRadius: 5,
               blurRadius: 7,
             ),
