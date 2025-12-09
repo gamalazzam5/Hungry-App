@@ -8,6 +8,7 @@ import 'package:hungry/root.dart';
 import 'package:hungry/features/splash/views/splash_view.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/presentation/manager/cubits/auth_cubit/auth_cubit.dart';
 import '../../features/auth/presentation/views/login_view.dart';
 import '../../features/auth/presentation/views/signup_view.dart';
 import '../../features/checkout/presentation/views/checkout_view.dart';
@@ -49,7 +50,6 @@ class AppRouter {
               ),
               BlocProvider(create: (_) => AddToCartCubit(getIt<CartRepo>())),
               BlocProvider(create: (_) => GetCartCubit(getIt<CartRepo>())),
-
             ],
             child: ProductDetailsView(productModel: product),
           );
@@ -59,8 +59,11 @@ class AppRouter {
         path: AppRoutePaths.checkout,
         builder: (context, state) {
           final data = state.extra as Map<String, dynamic>;
-          return BlocProvider(
-            create: (_) => SaveOrderCubit(getIt()),
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(create: (_) => SaveOrderCubit(getIt())),
+              BlocProvider(create: (_) => AuthCubit(getIt())),
+            ],
             child: CheckoutView(
               totalPrice: data['totalPrice'],
               items: data['items'],

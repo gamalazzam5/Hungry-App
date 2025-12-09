@@ -11,6 +11,7 @@ import 'package:hungry/features/checkout/presentation/manager/save_order_state.d
 import '../../../../core/shared/custom_button.dart';
 import '../../../../core/utils/custom_snack_bar.dart';
 import '../../../auth/data/model/user_model.dart';
+import '../../../auth/presentation/manager/cubits/auth_cubit/auth_cubit.dart';
 import '../../data/models/Order_model.dart';
 import '../widgets/order_details.dart';
 import '../widgets/payment_tile.dart';
@@ -35,8 +36,9 @@ class CheckoutView extends StatefulWidget {
 class _CheckoutViewState extends State<CheckoutView> {
   String selectedMethod = 'Cash';
   bool value = false;
-  UserModel? userModel;
+  late UserModel? userModel;
   late OrderModel orderModel;
+
   OrderModel buildOrderModel() {
     final items = List<Items>.generate(widget.items.length, (index) {
       final product = widget.items[index];
@@ -53,15 +55,15 @@ class _CheckoutViewState extends State<CheckoutView> {
 
     return OrderModel(items: items);
   }
- late SaveOrderCubit saveOrderCubit;
 
+  late SaveOrderCubit saveOrderCubit;
 
   @override
   void initState() {
     super.initState();
     orderModel = buildOrderModel();
     saveOrderCubit = context.read<SaveOrderCubit>();
-
+    userModel = context.read<AuthCubit>().currentUser;
   }
 
   @override
@@ -174,26 +176,29 @@ class _CheckoutViewState extends State<CheckoutView> {
                 ),
               ],
             ),
-            BlocConsumer<SaveOrderCubit,SaveOrderState>(
-listener: (_,state){
-  if(state is SaveOrderFailure){
-    if (!context.mounted) return;
-    AppSnackBar.showError(context, state.errMessage);
-  }
-  if(state is SaveOrderSuccess){
-    if (!context.mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => successDialog(context),
-    );
-  }
-},
-              builder: (_,state){
+            BlocConsumer<SaveOrderCubit, SaveOrderState>(
+              listener: (_, state) {
+                if (state is SaveOrderFailure) {
+                  if (!context.mounted) return;
+                  AppSnackBar.showError(context, state.errMessage);
+                }
+                if (state is SaveOrderSuccess) {
+                  if (!context.mounted) return;
+                  Navigator.pop(context);
+
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (dialogContext) => successDialog(dialogContext),
+                  );
+
+                }
+              },
+              builder: (_, state) {
                 bool loading = state is SaveOrderLoading;
                 return CustomButton(
                   iconData: CupertinoIcons.money_dollar_circle,
-                  isLoading: loading ,
+                  isLoading: loading,
 
                   text: 'Pay now',
                   withIcon: true,
@@ -204,7 +209,6 @@ listener: (_,state){
                   },
                 );
               },
-
             ),
           ],
         ),
