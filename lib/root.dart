@@ -63,7 +63,7 @@ class _RootState extends State<Root> {
                     if(index == currentIndex) return;
                     setState(() => currentIndex = index);
                     if (index == 1) {
-                      await context.read<GetCartCubit>().getCartData();
+                       context.read<GetCartCubit>().getCartData();
                     }
 
                   },

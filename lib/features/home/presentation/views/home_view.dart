@@ -54,7 +54,7 @@ class _HomeViewState extends State<HomeView> {
             SliverAppBar(
               pinned: true,
               backgroundColor: Colors.white,
-              toolbarHeight: 165,
+              toolbarHeight: 175,
               automaticallyImplyLeading: false,
               elevation: 0,
               scrolledUnderElevation: 0,

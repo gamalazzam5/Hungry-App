@@ -14,8 +14,6 @@ void main() async {
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   setUpServiceLocator();
   Bloc.observer = SimpleBlocObserver();
-  print(await PrefHelpers.getToken());
-
   runApp(
     MultiBlocProvider(
       providers: [
