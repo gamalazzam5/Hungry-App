@@ -15,9 +15,12 @@ import 'package:hungry/features/home/data/data_source/product_remote_data_source
 import 'package:hungry/features/home/data/repos/product_repo.dart';
 import 'package:hungry/features/home/data/repos/product_repo_impl.dart';
 import 'package:hungry/features/home/presentation/manager/cubits/product_cubit/product_cubit.dart';
+import 'package:hungry/features/orderHistory/data/repos/order_history_repo.dart';
+import 'package:hungry/features/orderHistory/presentation/manager/order_history_cubit.dart';
 
 import '../../features/auth/data/data_source/auth_remote_data_source_impl.dart';
 import '../../features/cart/data/data_sources/remote_data_source/cart_remote_data_source_impl.dart';
+import '../../features/orderHistory/data/data_sources/remote_data_source/order_remote_data_source.dart';
 import '../../features/product/presentation/manager/add_to_cart_cubit.dart';
 import '../network/api_service.dart';
 
@@ -58,4 +61,7 @@ void setUpServiceLocator() {
   );
 
   getIt.registerLazySingleton<SaveOrderCubit>(() => SaveOrderCubit(getIt()));
+  getIt.registerLazySingleton<OrderHistoryRemoteDataSource>(() => OrderHistoryRemoteDataSourceImpl(apiService: getIt()));
+  getIt.registerLazySingleton<OrderHistoryRepo>(() => OrderHistoryImpl(orderRemoteDataSource: getIt()));
+  getIt.registerLazySingleton<OrderHistoryCubit>(() => OrderHistoryCubit(getIt()));
 }

@@ -6,11 +6,12 @@ import 'package:hungry/core/utils/service_locator.dart';
 import 'package:hungry/features/auth/presentation/manager/cubits/auth_cubit/auth_cubit.dart';
 import 'package:hungry/features/cart/presentation/manager/cubits/get_cart_cubit/get_cart_cubit.dart';
 import 'package:hungry/features/cart/presentation/manager/cubits/remove_item_from_cart/remove_item_cubit.dart';
-import 'package:hungry/features/orderHistory/views/order_history_view.dart';
+import 'package:hungry/features/orderHistory/presentation/manager/order_history_cubit.dart';
 
 import 'features/auth/presentation/views/profile_view.dart';
 import 'features/cart/presentation/views/cart_view.dart';
 import 'features/home/presentation/views/home_view.dart';
+import 'features/orderHistory/presentation/views/order_history_view.dart';
 
 class Root extends StatefulWidget {
   const Root({super.key});
@@ -41,6 +42,7 @@ class _RootState extends State<Root> {
         BlocProvider(create: (_) => GetCartCubit(getIt())),
         BlocProvider(create: (_) => RemoveItemCubit(getIt())),
         BlocProvider(create: (_) => AuthCubit(getIt())),
+        BlocProvider(create: (_) => OrderHistoryCubit(getIt())),
       ],
       child: Builder(
         builder: (context){
