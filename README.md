@@ -1,53 +1,106 @@
 # 🍔 Hungry App
 
-**Hungry App** is a modern food ordering and delivery application built with **Flutter**. It follows a **Feature-First / Clean Architecture** approach to ensure scalability, testability, and code maintainability.
+**Hungry App** is a sophisticated food ordering and delivery application, engineered for scalability and performance. It is built with **Flutter**, adhering to a strict **Feature-First** and **Clean Architecture** methodology. This design ensures a highly maintainable codebase, testability, and a clear separation of concerns, making it a robust solution for modern mobile app development.
 
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
+![Architecture](https://img.shields.io/badge/Architecture-Clean%20%26%20Feature--First-brightgreen?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-In%20Development-yellow?style=for-the-badge)
+
+## 📖 Table of Contents
+
+- [Features](#-features)
+- [Architecture & Design](#-architecture--design)
+- [Project Structure](#-project-structure)
+- [Tech Stack](#-tech-stack)
+- [Getting Started](#-getting-started)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ## 📱 Features
 
-* **Browse Food**: View a dynamic list of available food items with high-quality images and details.
-* **Product Details**: comprehensive view for each food item including ingredients, price, and description.
-* **Shopping Cart**: Add items to your cart, manage quantities, and prepare for checkout.
-* **Clean Architecture**: Separation of concerns between Data, Domain, and Presentation layers.
-* **Network Layer**: robust API handling with custom error management and endpoints.
+The application is composed of several key functional modules:
 
-## 🛠️ Tech Stack & Architecture
+* **🔐 Authentication**: Secure user onboarding with login, registration, and splash screen functionalities.
+* **🏠 Home Dashboard**: A dynamic landing page showcasing featured foods, categories, and promotions.
+* **🍔 Product Catalog**: Detailed product listings with high-quality images, descriptions, and ingredient information.
+* **🛒 Shopping Cart**: A comprehensive cart management system for adding, removing, and adjusting item quantities.
+* **💳 Checkout Process**: A streamlined and secure checkout flow for finalizing orders.
+* **📜 Order History**: A section for users to view their past orders and track current delivery status.
 
-This project is built using **Flutter** and **Dart**, structured around a feature-driven design:
+## 🏛️ Architecture & Design
 
-* **Core**: Contains shared utilities, constants, and network logic (`api_service`, `app_colors`, etc.).
-* **Features**: Independent modules for each business capability (e.g., `food`, `carts`).
-    * **Data**: Models and Repositories.
-    * **View**: UI Screens and Pages.
-    * **Widgets**: Reusable UI components specific to the feature.
+This project is structured around a **Feature-First** approach combined with **Clean Architecture** principles. This means the application is divided into distinct functionalities (features), and each feature is internally organized into layers that separate business logic from UI and data handling.
+
+Each feature module (e.g., `cart`, `product`) contains its own isolated **Data** and **Presentation** layers:
+
+### **Data Layer (`data/`)**
+Responsible for data retrieval and management. It is further divided into:
+* **`data_sources/`**: Contains the logic for making remote API calls (e.g., REST, GraphQL) or accessing local storage (e.g., SQLite, SharedPreferences).
+* **`models/`**: Defines the data structures (Dart classes) used to model incoming data from sources. These are typically plain Dart objects (DTOs).
+* **`repos/`**: Implementations of the repository interface. This layer acts as a single source of truth for the data, coordinating between different data sources and mapping data models to domain entities.
+
+### **Presentation Layer (`presentation/`)**
+Responsible for the UI and user interaction. It includes:
+* **`manager/`**: Contains the state management logic (e.g., BLoC, Riverpod, Provider). It handles user events, communicates with the repository, and emits new states for the UI to render.
+* **`views/`**: The main screen files composed of widgets. These represent the full pages the user sees.
+* **`widgets/`**: Reusable, smaller UI components specific to that feature.
+
+This modular, layered approach ensures that changes in one part of the system (like switching a database or modifying a UI widget) have minimal impact on others, greatly enhancing maintainability and testability.
 
 ## 📂 Project Structure
 
-A high-level overview of the file structure:
+The file structure is a direct reflection of the architectural design.
 
 ```text
 lib/
-├── core/
-│   ├── constants/
-│   │   ├── api_endpoints.dart    # API URL definitions
-│   │   ├── app_colors.dart       # App-wide color palette
-│   │   └── app_strings.dart      # String constants & localization
-│   ├── network/
-│   │   ├── api_service.dart      # HTTP client & request handling
-│   │   └── api_exceptions.dart   # Custom exception handlers
-│   └── utils/
-│       ├── helpers.dart          # Helper functions
-│       └── validators.dart       # Input validation logic
-├── features/
-│   ├── food/
-│   │   ├── data/                 # Food models & repositories
-│   │   ├── view/                 # FoodList & FoodDetails screens
-│   │   └── widgets/              # FoodCard and other specific widgets
-│   └── carts/
-│       ├── data/
-│       ├── view/
-│       └── widgets/
-├── root.dart                     # Root application wrapper
-└── main.dart                     # Entry point
+├── core/                   # Shared resources across features
+├── features/               # Feature-specific modules
+│   ├── auth/               # Authentication feature
+│   ├── cart/               # Shopping cart feature
+│   │   ├── data/
+│   │   │   ├── data_sources/
+│   │   │   ├── models/
+│   │   │   └── repos/
+│   │   └── presentation/
+│   │       ├── manager/
+│   │       ├── views/
+│   │       └── widgets/
+│   ├── checkout/           # Checkout process feature
+│   │   ├── data/           # (Follows same structure as cart/data)
+│   │   └── presentation/   # (Follows same structure as cart/presentation)
+│   ├── home/               # Home screen feature
+│   │   ├── data/
+│   │   └── presentation/
+│   ├── orderHistory/       # Order history feature
+│   │   ├── data/
+│   │   └── presentation/
+│   ├── product/            # Product browsing feature
+│   │   ├── data/
+│   │   └── presentation/
+│   └── splash/             # Splash screen feature
+├── main.dart               # Application entry point
+└── root.dart               # Root widget setting up app-wide providers/themes
+
+
+## 🛠️ Tech Stack
+
+* **Framework**: [Flutter](https://flutter.dev)
+* **Language**: [Dart](https://dart.dev)
+* **Architecture**: Feature-First, Clean Architecture
+* **State Management**: (Specify your choice, e.g., flutter_bloc, riverpod)
+* **Networking**: (Specify your choice, e.g., dio, http)
+* **Service Locator**: (Specify your choice, e.g., get_it)
+
+## 🚀 Getting Started
+
+Follow these steps to set up the project locally.
+
+### Prerequisites
+
+* Make sure you have the [Flutter SDK](https://docs.flutter.dev/get-started/install) installed on your machine.
+* An IDE like [VS Code](https://code.visualstudio.com/) or [Android Studio](https://developer.android.com/studio) with the Flutter and Dart plugins installed.
+
+ **Clone the repository**
+   ```bash
+   git clone [https://github.com/gamalazzam5/Hungry-App.git](https://github.com/gamalazzam5/Hungry-App.git)
