@@ -1,30 +1,23 @@
-import 'Items.dart';
-
 class Data {
   Data({
       this.id, 
       this.status, 
       this.totalPrice, 
       this.createdAt, 
-      this.items,});
+      this.productImage,});
 
   Data.fromJson(dynamic json) {
     id = json['id'];
     status = json['status'];
     totalPrice = json['total_price'];
     createdAt = json['created_at'];
-    if (json['items'] != null) {
-      items = [];
-      json['items'].forEach((v) {
-        items?.add(Items.fromJson(v));
-      });
-    }
+    productImage = json['product_image'];
   }
   int? id;
   String? status;
   String? totalPrice;
   String? createdAt;
-  List<Items>? items;
+  String? productImage;
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
@@ -32,9 +25,7 @@ class Data {
     map['status'] = status;
     map['total_price'] = totalPrice;
     map['created_at'] = createdAt;
-    if (items != null) {
-      map['items'] = items?.map((v) => v.toJson()).toList();
-    }
+    map['product_image'] = productImage;
     return map;
   }
 

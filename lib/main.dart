@@ -6,9 +6,6 @@ import 'package:hungry/core/utils/service_locator.dart';
 import 'package:hungry/core/utils/simple_bloc_observer.dart';
 import 'package:hungry/features/auth/presentation/manager/cubits/auth_cubit/auth_cubit.dart';
 import 'package:hungry/features/home/presentation/manager/cubits/product_cubit/product_cubit.dart';
-
-import 'core/utils/pref_helpers.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);

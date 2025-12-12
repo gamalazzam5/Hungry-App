@@ -3,7 +3,7 @@ import 'package:gap/gap.dart';
 import 'package:hungry/core/constants/app_colors.dart';
 import 'package:hungry/core/shared/custom_button.dart';
 import 'package:hungry/features/orderHistory/data/models/Order_details.dart';
-import 'package:hungry/features/orderHistory/data/repos/order_history_repo.dart';
+import 'package:hungry/features/orderHistory/data/repos/old_order_history_repo.dart';
 
 import '../../../core/constants/app_styles.dart';
 
