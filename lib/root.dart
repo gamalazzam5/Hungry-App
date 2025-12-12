@@ -42,7 +42,7 @@ class _RootState extends State<Root> {
         BlocProvider(create: (_) => GetCartCubit(getIt())),
         BlocProvider(create: (_) => RemoveItemCubit(getIt())),
         BlocProvider(create: (_) => AuthCubit(getIt())),
-        BlocProvider(create: (_) => OrderHistoryCubit(getIt())),
+        BlocProvider(create: (_) => OrderHistoryCubit(getIt())..getOrderHistory()),
       ],
       child: Builder(
         builder: (context){

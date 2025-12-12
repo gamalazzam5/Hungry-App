@@ -45,6 +45,7 @@ class _HomeViewState extends State<HomeView> {
       backgroundColor: Colors.white,
       onRefresh: () async {
         if (!authCubit.isGuest) await authCubit.getProfileData();
+        if(!context.mounted)return;
         await context.read<ProductCubit>().getProducts();
       },
       child: Scaffold(
@@ -54,7 +55,7 @@ class _HomeViewState extends State<HomeView> {
             SliverAppBar(
               pinned: true,
               backgroundColor: Colors.white,
-              toolbarHeight: 175,
+              toolbarHeight: 190,
               automaticallyImplyLeading: false,
               elevation: 0,
               scrolledUnderElevation: 0,
